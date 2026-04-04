@@ -6,7 +6,7 @@
     <strong class="modal-title">Xác nhận đơn hàng thành công</strong>
     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
 </div>
-<form action="~/Order/Finish" method="post">
+<form id="frmFinishOrder" action="~/Order/Finish" method="post">
     <input type="hidden" name="id" value="@Model" />
     <div class="modal-body">
         <div class="alert alert-success d-flex align-items-center">

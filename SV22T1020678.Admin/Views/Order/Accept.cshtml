@@ -6,7 +6,7 @@
     <strong class="modal-title">Duyệt chấp nhận đơn hàng</strong>
     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
 </div>
-<form action="~/Order/Accept" method="post">
+<form id="frmAcceptOrder" action="~/Order/Accept" method="post">
     <input type="hidden" name="id" value="@Model" />
     <div class="modal-body">
         <div class="alert alert-info d-flex align-items-center">

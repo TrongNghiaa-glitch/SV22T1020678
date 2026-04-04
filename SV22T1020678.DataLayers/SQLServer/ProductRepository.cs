@@ -54,22 +54,26 @@ namespace SV22T1020678.DataLayers.SQLServer
 
             string searchCondition = $"%{input.SearchValue}%";
 
-            // Đếm tổng số dòng
+            // 1. Đếm tổng số dòng (Đã bổ sung lọc theo Giá)
             string sqlCount = @"
                 SELECT COUNT(*) 
                 FROM Products 
                 WHERE (@SearchValue = N'%%' OR ProductName LIKE @SearchValue)
                   AND (@CategoryID = 0 OR CategoryID = @CategoryID)
-                  AND (@SupplierID = 0 OR SupplierID = @SupplierID)";
+                  AND (@SupplierID = 0 OR SupplierID = @SupplierID)
+                  AND (Price >= @MinPrice)
+                  AND (@MaxPrice = 0 OR Price <= @MaxPrice)";
 
             result.RowCount = await connection.ExecuteScalarAsync<int>(sqlCount, new
             {
                 SearchValue = searchCondition,
                 CategoryID = input.CategoryID,
-                SupplierID = input.SupplierID
+                SupplierID = input.SupplierID,
+                MinPrice = input.MinPrice, // Truyền giá trị MinPrice xuống SQL
+                MaxPrice = input.MaxPrice  // Truyền giá trị MaxPrice xuống SQL
             });
 
-            // Nếu page size = 0 thì lấy tất cả, ngược lại thì phân trang
+            // 2. Lấy dữ liệu (Đã bổ sung lọc theo Giá)
             string sqlData = "";
             if (input.PageSize == 0)
             {
@@ -78,12 +82,16 @@ namespace SV22T1020678.DataLayers.SQLServer
                     WHERE (@SearchValue = N'%%' OR ProductName LIKE @SearchValue)
                       AND (@CategoryID = 0 OR CategoryID = @CategoryID)
                       AND (@SupplierID = 0 OR SupplierID = @SupplierID)
+                      AND (Price >= @MinPrice)
+                      AND (@MaxPrice = 0 OR Price <= @MaxPrice)
                     ORDER BY ProductName";
                 var data = await connection.QueryAsync<Product>(sqlData, new
                 {
                     SearchValue = searchCondition,
                     CategoryID = input.CategoryID,
-                    SupplierID = input.SupplierID
+                    SupplierID = input.SupplierID,
+                    MinPrice = input.MinPrice,
+                    MaxPrice = input.MaxPrice
                 });
                 result.DataItems = data.ToList();
             }
@@ -94,6 +102,8 @@ namespace SV22T1020678.DataLayers.SQLServer
                     WHERE (@SearchValue = N'%%' OR ProductName LIKE @SearchValue)
                       AND (@CategoryID = 0 OR CategoryID = @CategoryID)
                       AND (@SupplierID = 0 OR SupplierID = @SupplierID)
+                      AND (Price >= @MinPrice)
+                      AND (@MaxPrice = 0 OR Price <= @MaxPrice)
                     ORDER BY ProductName
                     OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY";
                 var data = await connection.QueryAsync<Product>(sqlData, new
@@ -101,6 +111,8 @@ namespace SV22T1020678.DataLayers.SQLServer
                     SearchValue = searchCondition,
                     CategoryID = input.CategoryID,
                     SupplierID = input.SupplierID,
+                    MinPrice = input.MinPrice,
+                    MaxPrice = input.MaxPrice,
                     Offset = input.Offset,
                     PageSize = input.PageSize
                 });

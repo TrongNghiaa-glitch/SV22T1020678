@@ -1,0 +1,36 @@
+﻿@model SV22T1020678.Models.Catalog.Product
+@{
+    ViewData["Title"] = Model.ProductName;
+}
+
+<div class="row mt-4">
+    <div class="col-md-5">
+        <img src="http://localhost:5258/images/products/@(string.IsNullOrEmpty(Model.Photo) ? "nophoto.png" : Model.Photo)" class="img-fluid rounded-4 shadow-sm w-100" style="object-fit: contain;">
+    </div>
+    <div class="col-md-7">
+        <h2 class="fw-bold mb-3">@Model.ProductName</h2>
+        <div class="mb-3">
+            <span class="badge bg-info text-dark fs-6 me-2">Đơn vị tính: @Model.Unit</span>
+        </div>
+        <h3 class="text-danger fw-bold mb-4">@Model.Price.ToString("N0") đ</h3>
+
+        <div class="card bg-light border-0 rounded-4 mb-4">
+            <div class="card-body">
+                <p class="mb-0">@Model.ProductDescription</p>
+            </div>
+        </div>
+
+        <form action="~/Cart/Add" method="post" class="d-flex align-items-center">
+            <input type="hidden" name="productId" value="@Model.ProductID" />
+            <input type="hidden" name="productName" value="@Model.ProductName" />
+            <input type="hidden" name="salePrice" value="@Model.Price" />
+
+            <div class="me-3">
+                <label class="form-label fw-bold">Số lượng:</label>
+                <input type="number" name="quantity" class="form-control rounded-pill text-center" value="1" min="1" style="width: 100px;">
+            </div>
+
+            <button type="submit" class="btn btn-danger btn-lg rounded-pill px-5 fw-bold mt-4 shadow"><i class="bi bi-cart-check"></i> THÊM VÀO GIỎ HÀNG</button>
+        </form>
+    </div>
+</div>

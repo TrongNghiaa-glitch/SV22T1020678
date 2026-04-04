@@ -6,6 +6,7 @@ using System.Security.Claims;
 
 namespace SV22T1020678.Admin.Controllers
 {
+
     public class AccountController : Controller
     {
         [HttpGet]
@@ -27,12 +28,12 @@ namespace SV22T1020678.Admin.Controllers
             }
 
             // TODO: Chỗ này sau này bạn thay bằng hàm check Database
-            if (email == "Nhi@gmail.com" && password == "123")
+            if (email == "nghia@gmail.com" && password == "123")
             {
                 // 1. Khởi tạo danh sách các thông tin (Claims) của người dùng
                 var claims = new List<Claim>()
                 {
-                    new Claim(ClaimTypes.Name, "Nhi"), // Tên hiển thị
+                    new Claim(ClaimTypes.Name, "Nghia"), // Tên hiển thị
                     new Claim(ClaimTypes.Email, email),
                     new Claim(ClaimTypes.Role, "Admin") // Cấp quyền Admin
                 };

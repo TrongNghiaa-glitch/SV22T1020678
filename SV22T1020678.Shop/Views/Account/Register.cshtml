@@ -1,0 +1,73 @@
+﻿@model SV22T1020678.Models.Partner.Customer
+@{
+    ViewData["Title"] = "Đăng ký thành viên";
+    Layout = "_Layout";
+}
+<div class="row justify-content-center mb-5">
+    <div class="col-md-6">
+        <div class="card shadow border-0 rounded-4 mt-5">
+            <div class="card-body p-5">
+                <h3 class="fw-bold text-center mb-4 text-primary">Đăng ký tài khoản</h3>
+
+                @if (ViewBag.Error != null)
+                {
+                    <div class="alert alert-danger"><i class="bi bi-exclamation-triangle"></i> @ViewBag.Error</div>
+                }
+
+                <form action="~/Account/Register" method="post">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Tên khách hàng (Họ và tên) <span class="text-danger">*</span></label>
+                        <input type="text" name="CustomerName" value="@Model?.CustomerName" class="form-control rounded-pill px-3" required autofocus>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Tên giao dịch <span class="text-danger">*</span></label>
+                        <input type="text" name="ContactName" value="@Model?.ContactName" class="form-control rounded-pill px-3" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Điện thoại <span class="text-danger">*</span></label>
+                        <input type="text" name="Phone" value="@Model?.Phone" class="form-control rounded-pill px-3" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Email đăng nhập <span class="text-danger">*</span></label>
+                        <input type="email" name="Email" value="@Model?.Email" class="form-control rounded-pill px-3" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Mật khẩu <span class="text-danger">*</span></label>
+                        <input type="password" name="Password" class="form-control rounded-pill px-3" required>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Tỉnh/Thành</label>
+                            <select class="form-select rounded-pill px-3" name="Province">
+                                <option value="">-- Chọn Tỉnh/Thành --</option>
+                                @if (ViewBag.Provinces != null)
+                                {
+                                    foreach (string provinceName in ViewBag.Provinces)
+                                    {
+                                        if (provinceName == Model?.Province)
+                                        {
+                                            <option value="@provinceName" selected>@provinceName</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@provinceName">@provinceName</option>
+                                        }
+                                    }
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Địa chỉ chi tiết</label>
+                            <input type="text" name="Address" value="@Model?.Address" class="form-control rounded-pill px-3">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 rounded-pill py-2 fw-bold mt-3">TẠO TÀI KHOẢN</button>
+                </form>
+                <div class="text-center mt-4">
+                    <span>Đã có tài khoản? </span><a href="~/Account/Login" class="text-decoration-none fw-bold">Đăng nhập tại đây</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

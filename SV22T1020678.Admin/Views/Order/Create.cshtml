@@ -13,6 +13,19 @@
             </div>
             <div class="card-body">
                 <form id="formSearchProduct" action="@Url.Action("SearchProduct", "Order")" method="get" class="mb-3">
+                    <div class="mb-2">
+                        <select class="form-select select2" name="categoryID">
+                            <option value="0">-- Tất cả loại hàng --</option>
+                            @if (ViewBag.Categories != null)
+                            {
+                                foreach (var item in ViewBag.Categories)
+                                {
+                                    <option value="@item.CategoryID">@item.CategoryName</option>
+                                }
+                            }
+                        </select>
+                    </div>
+
                     <div class="input-group">
                         <input class="form-control" name="searchValue" placeholder="Nhập tên mặt hàng cần tìm" autofocus />
                         <button class="btn btn-primary" type="submit">
@@ -125,17 +138,16 @@
                     <div class="row mb-3">
                         <label class="col-md-3 col-form-label fw-bold">Tỉnh/thành</label>
                         <div class="col-md-9">
-                            <input type="text" class="form-control" name="deliveryProvince"
-                                   list="provinceList" placeholder="-- Nhập hoặc chọn tỉnh/thành giao hàng --" required />
-                            <datalist id="provinceList">
+                            <select class="form-select select2" name="deliveryProvince" required>
+                                <option value="">-- Chọn tỉnh/thành giao hàng --</option>
                                 @if (ViewBag.Provinces != null)
                                 {
                                     foreach (var item in ViewBag.Provinces)
                                     {
-                                        <option value="@item.ProvinceName"></option>
+                                        <option value="@item.ProvinceName">@item.ProvinceName</option>
                                     }
                                 }
-                            </datalist>
+                            </select>
                         </div>
                     </div>
 
@@ -147,7 +159,7 @@
                     </div>
 
                     <div class="text-end mt-3">
-                        <button type="submit" class="btn btn-primary btn-lg" @(!Model.Any() ? "disabled" : "")>
+                        <button type="submit" id="btnSubmitOrder" class="btn btn-primary btn-lg" @(!Model.Any() ? "disabled" : "")>
                             <i class="bi bi-check-circle me-1"></i> Xác nhận lập đơn hàng
                         </button>
                     </div>
@@ -165,61 +177,102 @@
 
 @section Scripts {
     <script>
-        // Hàm load danh sách sản phẩm bằng AJAX
+        // 1. HÀM LOAD DANH SÁCH SẢN PHẨM BẰNG AJAX
         function doSearch(page) {
-            var searchValue = $("#formSearchProduct input[name='searchValue']").val();
-            var actionUrl = $("#formSearchProduct").prop("action");
+            try {
+                var searchValue = $("#formSearchProduct input[name='searchValue']").val() || "";
+                var categoryID = $("#formSearchProduct select[name='categoryID']").val() || 0;
+                var actionUrl = $("#formSearchProduct").prop("action");
 
-            $('#searchResult').html('<div class="text-center text-muted mt-3"><div class="spinner-border text-primary mb-2" role="status"></div><p>Đang tải dữ liệu...</p></div>');
+                $('#searchResult').html('<div class="text-center text-muted mt-3"><div class="spinner-border text-primary mb-2" role="status"></div><p>Đang tải dữ liệu...</p></div>');
 
-            $.ajax({
-                url: actionUrl,
-                type: "GET",
-                data: {
-                    searchValue: searchValue,
-                    page: page
-                },
-                success: function (result) {
-                    // CHỐT CHẶN: Kiểm tra xem kết quả trả về có phải là trang báo lỗi Server không
-                    if (result.includes("<html") || result.includes("<body")) {
-                        $('#searchResult').html('<p class="text-danger text-center mt-3">Lỗi Server (500): Không thể tải dữ liệu mặt hàng. Hãy kiểm tra lại hàm SearchProduct trong OrderController!</p>');
-                    } else {
-                        $('#searchResult').html(result);
+                $.ajax({
+                    url: actionUrl,
+                    type: "GET",
+                    data: {
+                        categoryID: categoryID,
+                        searchValue: searchValue,
+                        page: page
+                    },
+                    success: function (result) {
+                        if (result.includes("<html") || result.includes("<body")) {
+                            $('#searchResult').html('<p class="text-danger text-center mt-3">Lỗi C#: Tham số truyền vào chưa đúng, hãy kiểm tra lại hàm SearchProduct!</p>');
+                        } else {
+                            $('#searchResult').html(result);
+                        }
+                    },
+                    error: function () {
+                        $('#searchResult').html('<p class="text-danger text-center mt-3">Lỗi mạng: Không thể kết nối đến máy chủ.</p>');
                     }
-                },
-                error: function () {
-                    $('#searchResult').html('<p class="text-danger text-center mt-3">Không thể kết nối đến máy chủ. Vui lòng thử lại!</p>');
-                }
-            });
+                });
+            } catch (err) {
+                console.error("Lỗi JS ở hàm doSearch: ", err);
+                $('#searchResult').html('<p class="text-danger text-center mt-3">Lỗi JavaScript! Ấn F12 xem Console.</p>');
+            }
         }
 
-        $(document).ready(function () {
-            // Khởi tạo Select2 an toàn
+        // 2. HÀM KIỂM TRA FORM ĐỂ BẬT/TẮT NÚT XÁC NHẬN
+        function validateOrderForm() {
             try {
-                if (typeof $.fn.select2 !== 'undefined') {
-                    $('.select2').select2({
-                        placeholder: "-- Chọn khách hàng --",
-                        allowClear: true,
-                        width: '100%'
-                    });
+                var cusId = $("select[name='customerID']").val() || "";
+                var prov = ($("select[name='deliveryProvince']").val() || "").trim();
+                var addr = ($("input[name='deliveryAddress']").val() || $("textarea[name='deliveryAddress']").val() || "").trim();
+
+                var trCount = $("#shoppingCart tbody tr").length;
+                var firstCellText = $("#shoppingCart tbody tr:first td").text() || "";
+                var isCartEmpty = trCount === 0 || firstCellText.includes("trống");
+
+                var btn = $("#btnSubmitOrder");
+                if (btn.length > 0) {
+                    if (cusId !== "" && prov !== "" && addr !== "" && !isCartEmpty) {
+                        btn.prop("disabled", false);
+                    } else {
+                        btn.prop("disabled", true);
+                    }
                 }
             } catch (err) {
-                console.error("Lỗi khởi tạo Select2: ", err);
+                console.error("Lỗi chạy kiểm tra form: ", err);
+            }
+        }
+
+        // 3. KHỞI TẠO SỰ KIỆN KHI LOAD TRANG XONG
+        $(document).ready(function () {
+
+            // Khởi tạo Select2
+            try {
+                if (typeof $.fn.select2 !== 'undefined') {
+                    $('.select2').select2({ width: '100%' });
+                }
+            } catch (err) {
+                console.error("Lỗi Select2: ", err);
             }
 
-            // Tìm kiếm sản phẩm
+            // Gắn sự kiện Tìm kiếm
             $('#formSearchProduct').submit(function (e) {
                 e.preventDefault();
                 doSearch(1);
             });
 
-            // Tự động tìm kiếm lần đầu
+            // Tự động tìm kiếm khi đổi Loại hàng
+            $("#formSearchProduct select[name='categoryID']").on("change", function () {
+                doSearch(1);
+            });
+
+            // Gọi tìm kiếm lần đầu
             doSearch(1);
 
-            // Thêm vào giỏ hàng bằng AJAX
+            // Gắn sự kiện Validate form (Tỉnh/thành, Khách hàng, Địa chỉ)
+            validateOrderForm();
+            $("select[name='customerID'], select[name='deliveryProvince'], input[name='deliveryAddress'], textarea[name='deliveryAddress']").on("input change", function () {
+                validateOrderForm();
+            });
+            $("select[name='customerID'], select[name='deliveryProvince']").on("select2:select select2:unselect", function () {
+                validateOrderForm();
+            });
+
+            // Sự kiện: Thêm vào giỏ hàng
             $(document).on("submit", ".formAddToCart", function (e) {
                 e.preventDefault();
-
                 var form = $(this);
                 $.ajax({
                     url: form.prop("action"),
@@ -229,19 +282,19 @@
                         var newCartTable = $(result).find("#shoppingCart").html();
                         if (newCartTable) {
                             $("#shoppingCart").html(newCartTable);
+                            validateOrderForm(); // Check lại nút xác nhận
                         } else {
                             window.location.reload();
                         }
                     },
-                    error: function () {
-                        alert("Lỗi: Không thể thêm mặt hàng vào giỏ!");
-                    }
+                    error: function () { alert("Lỗi: Không thể thêm mặt hàng vào giỏ!"); }
                 });
             });
 
-            // Lập đơn hàng (Xử lý trả về JSON)
+            // Sự kiện: Chốt Lập đơn hàng
             $("#formOrderInit").submit(function (e) {
                 e.preventDefault();
+                if ($("#btnSubmitOrder").is(":disabled")) return false;
 
                 $.ajax({
                     url: $(this).prop("action"),
@@ -254,29 +307,24 @@
                             alert(result.message);
                         }
                     },
-                    error: function () {
-                        alert("Lỗi hệ thống khi kết nối đến máy chủ để lưu đơn hàng!");
-                    }
+                    error: function () { alert("Lỗi hệ thống khi kết nối đến máy chủ!"); }
                 });
             });
 
-            // Mở Modal chỉnh sửa giỏ hàng
+            // Sự kiện: Mở popup sửa số lượng trong giỏ
             $(document).on("click", ".open-modal", function (e) {
                 e.preventDefault();
-                var link = $(this).attr("href");
-
                 $.ajax({
-                    url: link,
+                    url: $(this).attr("href"),
                     type: "GET",
                     success: function (data) {
                         $("#dialogModalContent").html(data);
                         $("#dialogModal").modal("show");
                     },
-                    error: function () {
-                        alert("Không thể tải giao diện cập nhật mặt hàng!");
-                    }
+                    error: function () { alert("Không thể tải giao diện cập nhật mặt hàng!"); }
                 });
             });
+
         });
     </script>
 }

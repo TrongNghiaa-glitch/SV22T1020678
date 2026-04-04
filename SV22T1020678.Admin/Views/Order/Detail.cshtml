@@ -113,7 +113,7 @@
                 <h5 class="card-title mb-0"><i class="bi bi-person-lines-fill me-1"></i> Thông tin giao hàng</h5>
             </div>
             <div class="card-body">
-                <form action="~/Order/UpdateShippingAddress/@Model.OrderID" method="post">
+                <form id="frmUpdateShippingAddress" action="~/Order/UpdateShippingAddress/@Model.OrderID" method="post">
                     <div class="mb-2">
                         <label class="form-label text-muted small mb-1">Tên khách hàng:</label>
                         <input type="text" class="form-control form-control-sm" name="deliveryName" value="@Model.CustomerName" />
@@ -145,8 +145,8 @@
                     @if ((int)Model.Status == 1 || (int)Model.Status == 2)
                     {
                         <div class="text-end">
-                            <button type="submit" class="btn btn-sm btn-primary">
-                                <i class="bi bi-save me-1"></i> Cập nhật thông tin
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save"></i> Cập nhật thông tin
                             </button>
                         </div>
                     }
@@ -215,7 +215,7 @@
     </div>
 </div>
 
-<div id="dialogModal" class="modal fade" tabindex="-1" aria-hidden="true" style="display: none; z-index: 1050;">
+<div id="dialogModal" class="modal fade">
     <div class="modal-dialog">
         <div class="modal-content" id="dialogModalContent"></div>
     </div>
@@ -224,18 +224,119 @@
 @section Scripts {
     <script>
         $(document).ready(function () {
-            $(".open-modal").click(function (e) {
-                e.preventDefault();
-                var link = $(this).attr("href");
+
+            // Xử lý sự kiện khi bấm nút Submit của form Duyệt đơn hàng
+            $(document).on("submit", "#frmAcceptOrder", function (e) {
+                e.preventDefault(); // Chặn hành vi tải lại trang mặc định của form
+
+                var form = $(this);
+
                 $.ajax({
-                    url: link,
-                    type: "GET",
-                    success: function (data) {
-                        $("#dialogModalContent").html(data);
-                        $("#dialogModal").modal("show");
+                    url: form.prop("action"),
+                    type: form.prop("method"),
+                    data: form.serialize(),
+                    success: function (result) {
+                        if (result.success) {
+                            // 1. Tắt cái Modal hỏi chấm đi
+                            $("#dialogModal").modal("hide");
+
+                            // 2. HIỆN POPUP THÔNG BÁO THÀNH CÔNG
+                            // (Bạn có thể dùng SweetAlert2 ở đây nếu project có cài sẵn thư viện đó cho đẹp)
+                            alert("✅ " + result.message);
+
+                            // 3. Tải lại trang để cập nhật lại giao diện (Trạng thái, Tên người giao hàng...)
+                            window.location.reload();
+                        } else {
+                            alert("❌ Có lỗi xảy ra: " + result.message);
+                        }
                     },
                     error: function () {
-                        alert("Lỗi: Không thể tải nội dung xử lý đơn hàng.");
+                        alert("❌ Lỗi hệ thống khi kết nối đến máy chủ!");
+                    }
+                });
+            });
+
+           // Xử lý sự kiện khi bấm nút Chấp nhận của form HOÀN TẤT ĐƠN
+            $(document).on("submit", "#frmFinishOrder", function (e) {
+                e.preventDefault(); // Chặn tải lại trang
+
+                var form = $(this);
+
+                $.ajax({
+                    url: form.prop("action"),
+                    type: form.prop("method"),
+                    data: form.serialize(),
+                    success: function (result) {
+                        if (result.success) {
+                            // 1. Ẩn modal hỏi chấm
+                            $("#dialogModal").modal("hide");
+
+                            // 2. Hiện popup thông báo hoàn tất
+                            alert("✅ " + result.message);
+
+                            // 3. Tải lại trang để cập nhật trạng thái
+                            window.location.reload();
+                        } else {
+                            alert("❌ Có lỗi xảy ra: " + result.message);
+                        }
+                    },
+                    error: function () {
+                        alert("❌ Lỗi hệ thống khi kết nối đến máy chủ!");
+                    }
+                });
+            });
+            // Xử lý sự kiện khi bấm nút Chấp nhận của form XÓA ĐƠN HÀNG
+            $(document).on("submit", "#frmDeleteOrder", function (e) {
+                e.preventDefault();
+
+                var form = $(this);
+
+                $.ajax({
+                    url: form.prop("action"),
+                    type: form.prop("method"),
+                    data: form.serialize(),
+                    success: function (result) {
+                        if (result.success) {
+                            // 1. Ẩn modal
+                            $("#dialogModal").modal("hide");
+
+                            // 2. Hiện popup thông báo
+                            alert("✅ " + result.message);
+
+                            // 3. ĐIỂM KHÁC BIỆT: Chuyển hướng về trang Danh sách đơn hàng
+                            window.location.href = "/Order/Index";
+                        } else {
+                            alert("❌ Có lỗi xảy ra: " + result.message);
+                        }
+                    },
+                    error: function () {
+                        alert("❌ Lỗi hệ thống khi kết nối đến máy chủ!");
+                    }
+                });
+            });
+            // Xử lý sự kiện khi bấm nút Cập nhật thông tin giao hàng
+            $(document).on("submit", "#frmUpdateShippingAddress", function (e) {
+                e.preventDefault(); // Chặn hành vi văng sang trang 404
+
+                var form = $(this);
+
+                $.ajax({
+                    url: form.prop("action"),
+                    type: form.prop("method"),
+                    data: form.serialize(),
+                    success: function (result) {
+                        if (result.success) {
+                            // Hiện popup thông báo thành công
+                            alert("✅ " + result.message);
+
+                            // Tải lại trang để dữ liệu mới hiển thị
+                            window.location.reload();
+                        } else {
+                            alert("❌ " + result.message);
+                        }
+                    },
+                    error: function () {
+                        alert("❌ Lỗi hệ thống khi kết nối đến máy chủ!");
                     }
                 });
             });

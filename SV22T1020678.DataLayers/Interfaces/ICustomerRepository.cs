@@ -17,5 +17,7 @@ namespace SV22T1020678.DataLayers.Interfaces
         /// Nếu id <> 0: Kiểm tra email đối với khách hàng đã tồn tại
         /// </param>
         Task<bool> IsValidEmailAsync(string email, int id = 0);
+        // Lấy danh sách tên các tỉnh thành
+        Task<List<string>> GetProvincesAsync();
     }
 }

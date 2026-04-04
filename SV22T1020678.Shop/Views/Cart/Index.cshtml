@@ -1,0 +1,87 @@
+﻿@model IEnumerable<SV22T1020678.Models.Sales.CartItem>
+@{
+    ViewData["Title"] = "Giỏ hàng của bạn";
+}
+
+<h3 class="fw-bold mb-4"><i class="bi bi-cart3 text-primary"></i> Giỏ hàng của bạn</h3>
+
+@if (Model != null && Model.Any())
+{
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">Tên mặt hàng</th>
+                            <th class="text-center">Đơn giá</th>
+                            <th class="text-center" style="width: 150px;">Số lượng</th>
+                            <th class="text-end">Thành tiền</th>
+                            <th class="text-center pe-4">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td class="ps-4 fw-medium">@item.ProductName</td>
+                                <td class="text-center">@item.SalePrice.ToString("N0") đ</td>
+                                <td class="text-center">
+                                    <form action="~/Cart/Update" method="post" class="d-inline-block">
+                                        <input type="hidden" name="productId" value="@item.ProductID" />
+                                        <div class="input-group input-group-sm mx-auto" style="width: 120px;">
+                                            <input type="number" name="quantity" value="@item.Quantity"
+                                                   class="form-control text-center rounded-start"
+                                                   min="1"
+                                                   onchange="this.form.submit()" />
+                                            <button type="submit" class="btn btn-outline-primary rounded-end">
+                                                <i class="bi bi-arrow-repeat"></i>
+                                            </button>
+                                        </div>
+                                    </form>
+                                </td>
+                                <td class="text-end text-danger fw-bold">@item.TotalPrice.ToString("N0") đ</td>
+                                <td class="text-center pe-4">
+                                    <a href="~/Cart/Remove/@item.ProductID" class="btn btn-sm btn-outline-danger rounded-circle" title="Xóa">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                    <tfoot class="table-light">
+                        <tr>
+                            <td colspan="3" class="text-end fw-bold fs-5">TỔNG CỘNG:</td>
+                            <td class="text-end text-danger fw-bold fs-5">
+                                @Model.Sum(x => x.TotalPrice).ToString("N0") đ
+                            </td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center">
+        <a href="~/" class="btn btn-outline-secondary rounded-pill px-4">
+            <i class="bi bi-arrow-left"></i> Tiếp tục mua hàng
+        </a>
+        <div>
+            <a href="~/Cart/Clear" class="btn btn-outline-danger rounded-pill px-4 me-2">
+                <i class="bi bi-x-circle"></i> Xóa sạch giỏ
+            </a>
+            <a href="~/Order/Checkout" class="btn btn-primary rounded-pill px-5 fw-bold shadow-sm">
+                Thanh toán <i class="bi bi-arrow-right"></i>
+            </a>
+        </div>
+    </div>
+}
+else
+{
+    <div class="text-center py-5 bg-white rounded shadow-sm">
+        <img src="https://cdn-icons-png.flaticon.com/512/11329/11329060.png" alt="Empty Cart" style="width: 150px; opacity: 0.5;" class="mb-3">
+        <h5 class="text-muted">Giỏ hàng của bạn đang trống!</h5>
+        <a href="~/" class="btn btn-primary mt-3 rounded-pill px-4"><i class="bi bi-shop"></i> Quay lại cửa hàng</a>
+    </div>
+}

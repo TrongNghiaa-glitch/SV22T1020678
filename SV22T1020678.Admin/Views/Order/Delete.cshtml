@@ -6,7 +6,7 @@
     <strong class="modal-title">Xóa đơn hàng</strong>
     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
 </div>
-<form action="~/Order/Delete" method="post">
+<form id="frmDeleteOrder" action="~/Order/Delete" method="post">
     <input type="hidden" name="id" value="@Model" />
     <div class="modal-body">
         <div class="alert alert-danger d-flex align-items-center">

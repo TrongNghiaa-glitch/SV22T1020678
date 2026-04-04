@@ -1,5 +1,8 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using Dapper; // Thêm Dapper để truy vấn nhanh
+using Microsoft.Data.SqlClient; // Thêm SqlClient để mở kết nối
 using SV22T1020678.DataLayers.Interfaces;
 using SV22T1020678.DataLayers.SQLServer;
 using SV22T1020678.Models.Common;
@@ -39,6 +42,17 @@ namespace SV22T1020678.BusinessLayers
         public static async Task<bool> CancelOrderAsync(int id) => await orderDB.CancelAsync(id);
 
         public static async Task<bool> RejectOrderAsync(int id) => await orderDB.RejectAsync(id);
+
+        /// <summary>
+        /// Lấy danh sách đơn hàng theo ID của Khách hàng (Dành riêng cho Shop)
+        /// </summary>
+        public static async Task<List<Order>> ListOrdersByCustomerIdAsync(int customerId)
+        {
+            using var connection = new SqlConnection(Configuration.ConnectionString);
+            string sql = "SELECT * FROM Orders WHERE CustomerID = @CustomerID ORDER BY OrderTime DESC";
+            var data = await connection.QueryAsync<Order>(sql, new { CustomerID = customerId });
+            return data.ToList();
+        }
         #endregion
 
         #region Chi tiết Đơn hàng (OrderDetails)
@@ -59,6 +73,7 @@ namespace SV22T1020678.BusinessLayers
         {
             return await orderDB.SaveOrderAsync(data, details);
         }
+
         #endregion
     }
 }

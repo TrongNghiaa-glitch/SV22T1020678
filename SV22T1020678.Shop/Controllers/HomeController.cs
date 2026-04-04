@@ -1,32 +1,39 @@
-using Microsoft.AspNetCore.Mvc;
-using SV22T1020678.Shop.Models;
-using System.Diagnostics;
+﻿using Microsoft.AspNetCore.Mvc;
+using SV22T1020678.BusinessLayers;
+using SV22T1020678.Models.Catalog; // Thêm thư mục Catalog chứa Product
+using SV22T1020678.Models.Common;  // Thêm thư mục Common chứa PagedResult
 
 namespace SV22T1020678.Shop.Controllers
 {
     public class HomeController : Controller
     {
-        private readonly ILogger<HomeController> _logger;
-
-        public HomeController(ILogger<HomeController> logger)
+        public async Task<IActionResult> Index(int categoryId = 0, string searchValue = "", decimal minPrice = 0, decimal maxPrice = 0, int page = 1)
         {
-            _logger = logger;
+            var input = new ProductSearchInput()
+            {
+                Page = page,
+                PageSize = 24,
+                SearchValue = searchValue ?? "",
+                CategoryID = categoryId,
+                MinPrice = minPrice,
+                MaxPrice = maxPrice
+            };
+
+            var data = await CatalogDataService.ListProductsAsync(input);
+
+            // Sửa lỗi CS1503: Truyền đúng kiểu PaginationSearchInput vào hàm
+            // Thêm .DataItems để bóc lấy danh sách truyền ra ngoài View
+            ViewBag.Categories = (await CatalogDataService.ListCategoriesAsync(new PaginationSearchInput { SearchValue = "" })).DataItems;
+            ViewBag.SearchInput = input;
+
+            return View(data);
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Details(int id)
         {
-            return View();
-        }
-
-        public IActionResult Privacy()
-        {
-            return View();
-        }
-
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
-        {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+            var product = await CatalogDataService.GetProductAsync(id);
+            if (product == null) return RedirectToAction("Index");
+            return View(product);
         }
     }
 }

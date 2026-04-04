@@ -158,20 +158,23 @@ namespace SV22T1020678.BusinessLayers
             return await customerDB.ListAsync(input);
         }
 
-        /// <summary>
-        /// Lấy thông tin chi tiết khách hàng
-        /// </summary>
-        public static async Task<Customer?> GetCustomerAsync(int customerID)
+        public static async Task<Customer?> GetCustomerByEmailAsync(string email)
         {
-            return await customerDB.GetAsync(customerID);
-        }
+            if (string.IsNullOrWhiteSpace(email)) return null;
 
+            // Dùng hàm ListAsync có sẵn để khoanh vùng tìm kiếm
+            var searchInput = new PaginationSearchInput { Page = 1, PageSize = 1, SearchValue = email };
+            var result = await customerDB.ListAsync(searchInput);
+
+            // Ép kiểu và kiểm tra chính xác tuyệt đối
+            return result.DataItems.FirstOrDefault(c => c.Email != null && c.Email.Equals(email, StringComparison.OrdinalIgnoreCase));
+        }
         /// <summary>
-        /// Thêm mới khách hàng
+        /// Lấy thông tin khách hàng theo mã ID (Dành cho trang Admin)
         /// </summary>
-        public static async Task<int> AddCustomerAsync(Customer customer)
+        public static async Task<Customer?> GetCustomerAsync(int id)
         {
-            return await customerDB.AddAsync(customer);
+            return await customerDB.GetAsync(id);
         }
 
         /// <summary>
@@ -213,9 +216,29 @@ namespace SV22T1020678.BusinessLayers
         /// <returns>
         /// True nếu email hợp lệ, False nếu email đã tồn tại
         /// </returns>
-        public static async Task<bool> IsValidCustomerEmailAsync(string email, int customerID)
+        /// <summary>
+        /// Kiểm tra xem Email đã tồn tại trong hệ thống chưa
+        /// </summary>
+        public static async Task<bool> IsValidEmailAsync(string email, int id = 0)
         {
-            return await customerDB.IsValidEmailAsync(email, customerID);
+            var customer = await GetCustomerByEmailAsync(email);
+            if (customer == null) return true; // Chưa có ai dùng -> Hợp lệ
+            return customer.CustomerID == id; // Trùng hợp lệ nếu là chính người đó đang cập nhật
+        }
+
+        /// <summary>
+        /// Thêm khách hàng mới (Đăng ký)
+        /// </summary>
+        public static async Task<int> AddCustomerAsync(Customer data)
+        {
+            return await customerDB.AddAsync(data);
+        }
+        /// <summary>
+        /// Lấy danh sách tên các Tỉnh/Thành
+        /// </summary>
+        public static async Task<List<string>> ListProvincesAsync()
+        {
+            return await customerDB.GetProvincesAsync();
         }
 
         #endregion

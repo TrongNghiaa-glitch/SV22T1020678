@@ -1,0 +1,61 @@
+﻿@model IEnumerable<SV22T1020678.Models.Sales.CartItem>
+@{
+    ViewData["Title"] = "Thanh toán";
+}
+
+<div class="row">
+    <div class="col-md-7">
+        <div class="card shadow-sm border-0 rounded-3 mb-4">
+            <div class="card-header bg-white fw-bold">Thông tin giao hàng</div>
+            <div class="card-body">
+                <form id="frmCheckout">
+                    <div class="mb-3">
+                        <label class="form-label">Tỉnh/Thành</label>
+                        <input type="text" name="deliveryProvince" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Địa chỉ nhận hàng cụ thể</label>
+                        <textarea name="deliveryAddress" class="form-control" rows="3" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-danger w-100 py-3 fw-bold rounded-3">XÁC NHẬN ĐẶT HÀNG</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-5">
+        <div class="card shadow-sm border-0 rounded-3">
+            <div class="card-header bg-white fw-bold">Tóm tắt đơn hàng</div>
+            <div class="card-body">
+                @foreach (var item in Model)
+                {
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>@item.ProductName x @item.Quantity</span>
+                        <span>@item.TotalPrice.ToString("N0") đ</span>
+                    </div>
+                }
+                <hr>
+                <div class="d-flex justify-content-between fw-bold fs-5 text-danger">
+                    <span>TỔNG CỘNG:</span>
+                    <span>@Model.Sum(x => x.TotalPrice).ToString("N0") đ</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $("#frmCheckout").submit(function(e) {
+            e.preventDefault();
+            $.ajax({
+                url: '/Order/Init', type: 'POST', data: $(this).serialize(),
+                success: function(res) {
+                    if(res.success) {
+                        alert("Đặt hàng thành công!");
+                        window.location.href = "/"; // Hoặc trang lịch sử đơn hàng
+                    } else { alert(res.message); }
+                }
+            });
+        });
+    </script>
+}
