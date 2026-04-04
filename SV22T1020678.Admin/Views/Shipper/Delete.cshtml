@@ -1,0 +1,56 @@
+﻿@model SV22T1020678.Models.Partner.Shipper
+@{
+}
+
+@section PageToolBar {
+    @if (ViewBag.IsUsed == false)
+    {
+        <button type="submit" form="formDelete" class="btn btn-danger">
+            <i class="bi bi-trash me-1"></i> Xóa
+        </button>
+    }
+    <a href="~/Shipper" class="btn btn-secondary ms-1">
+        <i class="bi bi-arrow-left"></i> Quay lại
+    </a>
+}
+
+<div class="row justify-content-center">
+    <div class="col-12">
+        <div class="card card-danger card-outline">
+            <div class="card-header">
+                <h5 class="card-title mb-0 text-danger">
+                    <i class="bi bi-exclamation-triangle me-2"></i> Xác nhận xóa người giao hàng
+                </h5>
+            </div>
+
+            <div class="card-body">
+                @if (ViewBag.IsUsed == true)
+                {
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        <strong>Không thể xóa!</strong> Người giao hàng này đang có dữ liệu liên quan trong hệ thống.
+                    </div>
+                }
+                else
+                {
+                    <form id="formDelete" action="~/Shipper/Delete/@Model.ShipperID" method="post">
+                        <input type="hidden" name="ShipperID" value="@Model.ShipperID" />
+
+                        <div class="alert alert-warning d-flex align-items-center">
+                            <i class="bi bi-info-circle me-2"></i>
+                            Bạn có chắc chắn muốn xóa người giao hàng sau không?
+                        </div>
+
+                        <dl class="row mb-0 mt-3">
+                            <dt class="col-sm-4">Tên người giao hàng</dt>
+                            <dd class="col-sm-8">@Model.ShipperName</dd>
+
+                            <dt class="col-sm-4">Điện thoại</dt>
+                            <dd class="col-sm-8">@Model.Phone</dd>
+                        </dl>
+                    </form>
+                }
+            </div>
+        </div>
+    </div>
+</div>

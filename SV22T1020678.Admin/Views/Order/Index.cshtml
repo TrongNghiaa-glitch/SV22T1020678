@@ -1,0 +1,73 @@
+﻿@{
+    ViewBag.Title = "Quản lý Đơn hàng";
+}
+
+<div class="mb-3 text-end">
+    <a href="~/Order/Create" class="btn btn-primary">
+        <i class="bi bi-plus-circle me-1"></i> Lập đơn hàng
+    </a>
+</div>
+
+<div class="card mb-3">
+    <div class="card-body">
+        <form id="formSearch" action="~/Order/Search" method="post">
+            <div class="row gx-2">
+                <div class="col-sm-3 mb-2">
+                    <select class="form-select" name="status">
+                        <option value="0" selected="@(ViewBag.Status == 0)">-- Trạng thái --</option>
+                        <option value="1" selected="@(ViewBag.Status == 1)">Đơn hàng mới (Chờ duyệt)</option>
+                        <option value="2" selected="@(ViewBag.Status == 2)">Đơn hàng đã duyệt (Chờ chuyển hàng)</option>
+                        <option value="3" selected="@(ViewBag.Status == 3)">Đơn hàng đang được giao</option>
+                        <option value="4" selected="@(ViewBag.Status == 4)">Đơn hàng đã hoàn tất</option>
+                        <option value="-1" selected="@(ViewBag.Status == -1)">Đơn hàng bị hủy</option>
+                        <option value="-2" selected="@(ViewBag.Status == -2)">Đơn hàng bị từ chối</option>
+                    </select>
+                </div>
+                <div class="col-sm-9 mb-2">
+                    <div class="input-group">
+                        <input type="text" class="form-control" name="searchValue" placeholder="Nhập tên khách hàng..." value="@ViewBag.SearchValue">
+                        <button class="btn btn-info d-flex align-items-center" type="submit">
+                            <i class="bi bi-search me-1"></i> Tìm kiếm
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="searchResult"></div>
+
+@section Scripts {
+    <script>
+        // Hàm load dữ liệu ngầm (AJAX)
+        function doSearch(page) {
+            var searchCondition = $("#formSearch").serializeArray();
+            searchCondition.push({ name: "page", value: page });
+
+            $.ajax({
+                url: $("#formSearch").prop("action"),
+                type: $("#formSearch").prop("method"),
+                data: searchCondition,
+                success: function (data) {
+                    // Lấy kết quả đắp vào thẻ div searchResult
+                    $("#searchResult").html(data);
+                },
+                error: function() {
+                    alert("Có lỗi xảy ra khi tải dữ liệu tìm kiếm!");
+                }
+            });
+        }
+
+        $(document).ready(function () {
+            // Tự động load dữ liệu lần đầu tiên khi mới mở trang
+            doSearch(@(ViewBag.Page ?? 1));
+
+            // BẮT SỰ KIỆN SUBMIT FORM CHUẨN XÁC
+            $("#formSearch").submit(function (e) {
+                e.preventDefault(); // Ngăn chặn tuyệt đối hành vi chuyển trang mặc định
+                doSearch(1);        // Trở về trang 1 khi bấm tìm kiếm mới
+            });
+        });
+    </script>
+}

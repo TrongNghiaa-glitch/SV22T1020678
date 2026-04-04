@@ -1,0 +1,52 @@
+﻿@{
+    ViewBag.Title = "Quản lý Khách hàng";
+}
+
+@section PageToolBar {
+    <a href="~/Customer/Create" class="btn btn-primary">
+        <i class="bi bi-plus-circle me-1"></i> Bổ sung
+    </a>
+}
+
+<div class="card mb-3">
+    <div class="card-body">
+        <form id="formSearch" action="~/Customer/Search" method="post" onsubmit="doSearch(1); return false;">
+
+            <!-- luôn bắt đầu từ page 1 -->
+            <input type="hidden" name="Page" id="Page" value="1" />
+
+            <div class="input-group">
+                <input type="text" class="form-control" name="SearchValue"
+                       value="@ViewBag.SearchValue"
+                       placeholder="Nhập tên, email hoặc điện thoại..." autofocus />
+
+                <button class="btn btn-info">
+                    <i class="bi bi-search me-1"></i> Tìm kiếm
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="searchResult"></div>
+
+@section Scripts {
+    <script>
+        function doSearch(page) {
+            $("#Page").val(page);
+
+            $.ajax({
+                url: $("#formSearch").prop("action"),
+                type: "POST",
+                data: $("#formSearch").serialize(),
+                success: function (data) {
+                    $("#searchResult").html(data);
+                }
+            });
+        }
+
+        $(document).ready(function () {
+            doSearch(1); // LUÔN load từ trang 1
+        });
+    </script>
+}

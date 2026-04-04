@@ -1,0 +1,88 @@
+﻿@model SV22T1020678.Models.Partner.Customer
+@{
+}
+@section PageToolBar {
+    <button type="submit" form="formEdit" class="btn btn-primary">
+        <i class="bi bi-save me-1"></i> Lưu dữ liệu
+    </button>
+    <a href="~/Customer" class="btn btn-secondary ms-1">
+        <i class="bi bi-arrow-left me-1"></i> Quay lại
+    </a>
+}
+
+<div class="row justify-content-center">
+    <div class="col-12">
+        <div class="card card-primary card-outline">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-people me-2"></i> Thông tin khách hàng
+                </h5>
+            </div>
+
+            <div class="card-body">
+                @Html.ValidationSummary(false, "", new { @class = "text-danger mb-3" })
+
+                <form id="formEdit" action="~/Customer/Save" method="post">
+                    <input type="hidden" name="CustomerID" value="@Model.CustomerID" />
+
+                    <div class="row align-items-end">
+                        <div class="col-md-5 mb-3">
+                            <label class="form-label">Tên khách hàng</label>
+                            <input type="text" class="form-control" name="CustomerName" value="@Model.CustomerName" placeholder="Nhập tên khách hàng" autofocus />
+                        </div>
+                        <div class="col-md-5 mb-3">
+                            <label class="form-label">Tên giao dịch</label>
+                            <input type="text" class="form-control" name="ContactName" value="@Model.ContactName" placeholder="Nhập tên giao dịch" />
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-5 mb-3">
+                            <label class="form-label">Điện thoại</label>
+                            <input type="tel" class="form-control" name="Phone" value="@Model.Phone" placeholder="Nhập số điện thoại" />
+                        </div>
+                        <div class="col-md-7 mb-3">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" name="Email" value="@Model.Email" placeholder="Nhập email" />
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Địa chỉ</label>
+                        <textarea class="form-control" rows="2" name="Address" placeholder="Nhập địa chỉ">@Model.Address</textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Tỉnh / Thành</label>
+                        <select class="form-select" name="Province">
+                            <option value="">-- Chọn tỉnh / thành --</option>
+                            @if (ViewBag.Provinces != null)
+                            {
+                                foreach (var p in ViewBag.Provinces)
+                                {
+                                    if (p.ProvinceName == Model.Province)
+                                    {
+                                        <option value="@p.ProvinceName" selected>@p.ProvinceName</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@p.ProvinceName">@p.ProvinceName</option>
+                                    }
+                                }
+                            }
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Trạng thái tài khoản</label>
+                        <div class="form-check form-switch mt-1">
+                            <input class="form-check-input" type="checkbox" id="IsLocked" name="IsLocked" value="true" @(Model.IsLocked == true ? "checked" : "") />
+                            <input type="hidden" name="IsLocked" value="false" />
+                            <label class="form-check-label text-danger" for="IsLocked">Khóa tài khoản</label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

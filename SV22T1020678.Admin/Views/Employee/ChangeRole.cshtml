@@ -1,0 +1,101 @@
+﻿@model SV22T1020678.Models.HR.Employee
+@{
+    ViewBag.Title = "Phân quyền nhân viên";
+}
+
+@section PageToolBar {
+    <button type="submit" form="formChangeRole" class="btn btn-primary">
+        <i class="bi bi-shield-check me-1"></i>
+        Lưu phân quyền
+    </button>
+    <a href="~/Employee" class="btn btn-secondary ms-1">
+        <i class="bi bi-arrow-left"></i>
+        Quay lại
+    </a>
+}
+
+<div class="row justify-content-center">
+    <div class="col-12">
+        <div class="card card-primary card-outline">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-shield-check me-2"></i>
+                    Phân quyền cho nhân viên
+                </h5>
+            </div>
+
+            <div class="card-body">
+                <form id="formChangeRole" action="~/Employee/SaveRole" method="post">
+
+                    <input type="hidden" name="employeeID" value="@Model.EmployeeID" />
+
+                    <fieldset class="mb-4">
+                        <legend class="fs-6 text-muted mb-3">
+                            <i class="bi bi-person me-1"></i>
+                            Thông tin nhân viên
+                        </legend>
+
+                        <dl class="row mb-0">
+                            <dt class="col-sm-3">Họ và tên</dt>
+                            <dd class="col-sm-9">@Model.FullName</dd>
+
+                            <dt class="col-sm-3">Điện thoại</dt>
+                            <dd class="col-sm-9">@Model.Phone</dd>
+
+                            <dt class="col-sm-3">Email</dt>
+                            <dd class="col-sm-9">@Model.Email</dd>
+                        </dl>
+                    </fieldset>
+
+                    <fieldset>
+                        <legend class="fs-6 text-muted mb-3">
+                            <i class="bi bi-list-check me-1"></i>
+                            Danh sách quyền hạn
+                        </legend>
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="text-center" style="width: 80px;">Chọn</th>
+                                        <th style="width: 200px;">Tên quyền</th>
+                                        <th>Mô tả</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @{
+                                        // Danh sách các quyền có trong hệ thống
+                                        var allRoles = new List<dynamic>
+                                                                        {
+                                                                        new { RoleName = "Admin", Description = "Quản trị hệ thống, người dùng, phân quyền" },
+                                                                        new { RoleName = "ManageProducts", Description = "Quản lý thông tin sản phẩm, giá bán, trạng thái" },
+                                                                        new { RoleName = "ManageOrders", Description = "Tạo, xử lý và theo dõi đơn hàng" },
+                                                                        new { RoleName = "ManageCustomers", Description = "Quản lý thông tin khách hàng" }
+                                                                        };
+
+                                        // Lấy các quyền hiện tại của nhân viên từ CSDL để check sẵn
+                                        var currentRoles = Model.RoleNames?.Split(',').Select(r => r.Trim()).ToList() ?? new List<string>();
+                                    }
+
+                                    @foreach (var role in allRoles)
+                                    {
+                                        <tr>
+                                            <td class="text-center">
+                                                <input class="form-check-input" type="checkbox"
+                                                       name="roles"
+                                                       value="@role.RoleName"
+                                                       @(currentRoles.Contains((string)role.RoleName) ? "checked" : "") />
+                                            </td>
+                                            <td><span class="badge bg-secondary">@role.RoleName</span></td>
+                                            <td>@role.Description</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </fieldset>
+
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

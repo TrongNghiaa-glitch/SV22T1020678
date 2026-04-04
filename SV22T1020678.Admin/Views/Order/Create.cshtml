@@ -1,0 +1,282 @@
+﻿@model IEnumerable<SV22T1020678.Models.Sales.CartItem>
+@{
+    ViewBag.Title = "Lập đơn hàng";
+}
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card card-outline card-primary h-100">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-search"></i> Lựa chọn hàng cần bán
+                </h5>
+            </div>
+            <div class="card-body">
+                <form id="formSearchProduct" action="@Url.Action("SearchProduct", "Order")" method="get" class="mb-3">
+                    <div class="input-group">
+                        <input class="form-control" name="searchValue" placeholder="Nhập tên mặt hàng cần tìm" autofocus />
+                        <button class="btn btn-primary" type="submit">
+                            <i class="bi bi-search"></i>
+                        </button>
+                    </div>
+                </form>
+
+                <div id="searchResult">
+                    <div class="text-center text-muted mt-3">
+                        <div class="spinner-border text-primary mb-2" role="status"></div>
+                        <p>Đang tải dữ liệu...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        <div class="card card-outline card-info">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="bi bi-cart me-1"></i> Giỏ hàng của bạn
+                </h5>
+                @if (Model.Any())
+                {
+                    <form action="~/Order/ClearCart" method="post" onsubmit="return confirm('Bạn có chắc muốn xóa toàn bộ giỏ hàng?');">
+                        <button type="submit" class="btn btn-sm btn-danger"><i class="bi bi-trash"></i> Xóa giỏ hàng</button>
+                    </form>
+                }
+            </div>
+
+            <div class="card-body p-0">
+                <div id="shoppingCart" class="table-responsive">
+                    <table class="table table-bordered table-hover mb-0">
+                        <thead class="table-info">
+                            <tr>
+                                <th class="text-center" style="width:50px">STT</th>
+                                <th>Tên hàng</th>
+                                <th class="text-center" style="width:100px">Số lượng</th>
+                                <th class="text-end" style="width:120px">Đơn giá</th>
+                                <th class="text-end" style="width:120px">Thành tiền</th>
+                                <th style="width:80px"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.Any())
+                            {
+                                int i = 1;
+                                foreach (var item in Model)
+                                {
+                                    <tr>
+                                        <td class="text-center align-middle">@(i++)</td>
+                                        <td class="align-middle">@item.ProductName</td>
+                                        <td class="text-center align-middle">@item.Quantity</td>
+                                        <td class="text-end align-middle">@item.SalePrice.ToString("N0")</td>
+                                        <td class="text-end align-middle fw-bold">@item.TotalPrice.ToString("N0")</td>
+                                        <td class="text-center align-middle text-nowrap">
+                                            <a href="~/Order/EditCartItem?productId=@item.ProductID" class="btn btn-sm btn-info open-modal" title="Cập nhật số lượng/giá">
+                                                <i class="bi bi-pencil-square"></i>
+                                            </a>
+                                            <a href="~/Order/RemoveFromCart/@item.ProductID" class="btn btn-sm btn-danger" title="Xóa mặt hàng này">
+                                                <i class="bi bi-dash"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="6" class="text-center p-4 text-muted">
+                                        Giỏ hàng đang trống. Vui lòng tìm và chọn sản phẩm để thêm vào giỏ.
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                        @if (Model.Any())
+                        {
+                            <tfoot>
+                                <tr class="table-light">
+                                    <th colspan="4" class="text-end">Tổng cộng:</th>
+                                    <th class="text-end text-danger fs-5">@Model.Sum(x => x.TotalPrice).ToString("N0")</th>
+                                    <th></th>
+                                </tr>
+                            </tfoot>
+                        }
+                    </table>
+                </div>
+            </div>
+
+            <div class="card-footer bg-white">
+                <form action="~/Order/Init" method="post" id="formOrderInit">
+                    <div class="row mb-3">
+                        <label class="col-md-3 col-form-label fw-bold">Khách hàng</label>
+                        <div class="col-md-9">
+                            <select class="form-select select2" name="customerID" required>
+                                <option value="">-- Chọn khách hàng --</option>
+                                @if (ViewBag.Customers != null)
+                                {
+                                    foreach (var item in ViewBag.Customers)
+                                    {
+                                        <option value="@item.CustomerID">@item.CustomerName - @item.Phone</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <label class="col-md-3 col-form-label fw-bold">Tỉnh/thành</label>
+                        <div class="col-md-9">
+                            <input type="text" class="form-control" name="deliveryProvince"
+                                   list="provinceList" placeholder="-- Nhập hoặc chọn tỉnh/thành giao hàng --" required />
+                            <datalist id="provinceList">
+                                @if (ViewBag.Provinces != null)
+                                {
+                                    foreach (var item in ViewBag.Provinces)
+                                    {
+                                        <option value="@item.ProvinceName"></option>
+                                    }
+                                }
+                            </datalist>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <label class="col-md-3 col-form-label fw-bold">Địa chỉ nhận</label>
+                        <div class="col-md-9">
+                            <textarea class="form-control" name="deliveryAddress" rows="2" placeholder="Nhập địa chỉ nhận hàng cụ thể" required></textarea>
+                        </div>
+                    </div>
+
+                    <div class="text-end mt-3">
+                        <button type="submit" class="btn btn-primary btn-lg" @(!Model.Any() ? "disabled" : "")>
+                            <i class="bi bi-check-circle me-1"></i> Xác nhận lập đơn hàng
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="dialogModal" class="modal fade" tabindex="-1" aria-hidden="true" style="display: none; z-index: 1050;">
+    <div class="modal-dialog">
+        <div class="modal-content" id="dialogModalContent"></div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Hàm load danh sách sản phẩm bằng AJAX
+        function doSearch(page) {
+            var searchValue = $("#formSearchProduct input[name='searchValue']").val();
+            var actionUrl = $("#formSearchProduct").prop("action");
+
+            $('#searchResult').html('<div class="text-center text-muted mt-3"><div class="spinner-border text-primary mb-2" role="status"></div><p>Đang tải dữ liệu...</p></div>');
+
+            $.ajax({
+                url: actionUrl,
+                type: "GET",
+                data: {
+                    searchValue: searchValue,
+                    page: page
+                },
+                success: function (result) {
+                    // CHỐT CHẶN: Kiểm tra xem kết quả trả về có phải là trang báo lỗi Server không
+                    if (result.includes("<html") || result.includes("<body")) {
+                        $('#searchResult').html('<p class="text-danger text-center mt-3">Lỗi Server (500): Không thể tải dữ liệu mặt hàng. Hãy kiểm tra lại hàm SearchProduct trong OrderController!</p>');
+                    } else {
+                        $('#searchResult').html(result);
+                    }
+                },
+                error: function () {
+                    $('#searchResult').html('<p class="text-danger text-center mt-3">Không thể kết nối đến máy chủ. Vui lòng thử lại!</p>');
+                }
+            });
+        }
+
+        $(document).ready(function () {
+            // Khởi tạo Select2 an toàn
+            try {
+                if (typeof $.fn.select2 !== 'undefined') {
+                    $('.select2').select2({
+                        placeholder: "-- Chọn khách hàng --",
+                        allowClear: true,
+                        width: '100%'
+                    });
+                }
+            } catch (err) {
+                console.error("Lỗi khởi tạo Select2: ", err);
+            }
+
+            // Tìm kiếm sản phẩm
+            $('#formSearchProduct').submit(function (e) {
+                e.preventDefault();
+                doSearch(1);
+            });
+
+            // Tự động tìm kiếm lần đầu
+            doSearch(1);
+
+            // Thêm vào giỏ hàng bằng AJAX
+            $(document).on("submit", ".formAddToCart", function (e) {
+                e.preventDefault();
+
+                var form = $(this);
+                $.ajax({
+                    url: form.prop("action"),
+                    type: form.prop("method"),
+                    data: form.serialize(),
+                    success: function (result) {
+                        var newCartTable = $(result).find("#shoppingCart").html();
+                        if (newCartTable) {
+                            $("#shoppingCart").html(newCartTable);
+                        } else {
+                            window.location.reload();
+                        }
+                    },
+                    error: function () {
+                        alert("Lỗi: Không thể thêm mặt hàng vào giỏ!");
+                    }
+                });
+            });
+
+            // Lập đơn hàng (Xử lý trả về JSON)
+            $("#formOrderInit").submit(function (e) {
+                e.preventDefault();
+
+                $.ajax({
+                    url: $(this).prop("action"),
+                    type: $(this).prop("method"),
+                    data: $(this).serialize(),
+                    success: function (result) {
+                        if (result.success) {
+                            window.location.href = "/Order/Detail/" + result.orderID;
+                        } else {
+                            alert(result.message);
+                        }
+                    },
+                    error: function () {
+                        alert("Lỗi hệ thống khi kết nối đến máy chủ để lưu đơn hàng!");
+                    }
+                });
+            });
+
+            // Mở Modal chỉnh sửa giỏ hàng
+            $(document).on("click", ".open-modal", function (e) {
+                e.preventDefault();
+                var link = $(this).attr("href");
+
+                $.ajax({
+                    url: link,
+                    type: "GET",
+                    success: function (data) {
+                        $("#dialogModalContent").html(data);
+                        $("#dialogModal").modal("show");
+                    },
+                    error: function () {
+                        alert("Không thể tải giao diện cập nhật mặt hàng!");
+                    }
+                });
+            });
+        });
+    </script>
+}

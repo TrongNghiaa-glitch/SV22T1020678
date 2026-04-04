@@ -1,0 +1,85 @@
+﻿@{
+    ViewBag.Title = "Quản lý Mặt hàng";
+}
+@section PageToolBar {
+    <a href="~/Product/Create" class="btn btn-primary">
+        <i class="bi bi-plus-circle me-1"></i> Bổ sung
+    </a>
+}
+<div class="card mb-3">
+    <div class="card-body">
+        <form id="formSearch" action="~/Product/Search" method="post" data-target="searchResult" onsubmit="paginationSearch(event, this, 1)">
+            <div class="row g-2">
+                <div class="col-md-3">
+                    <label class="form-label">Loại hàng</label>
+                    <select name="CategoryID" class="form-select">
+                        <option value="0">-- Tất cả --</option>
+                        @if (ViewBag.Categories != null)
+                        {
+                            foreach (var item in ViewBag.Categories)
+                            {
+                                if (item.CategoryID == ViewBag.CategoryID)
+                                {
+                                    <option value="@item.CategoryID" selected>@item.CategoryName</option>
+                                }
+                                else
+                                {
+                                    <option value="@item.CategoryID">@item.CategoryName</option>
+                                }
+                            }
+                        }
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Nhà cung cấp</label>
+                    <select name="SupplierID" class="form-select">
+                        <option value="0">-- Tất cả --</option>
+                        @if (ViewBag.Suppliers != null)
+                        {
+                            foreach (var item in ViewBag.Suppliers)
+                            {
+                                if (item.SupplierID == ViewBag.SupplierID)
+                                {
+                                    <option value="@item.SupplierID" selected>@item.SupplierName</option>
+                                }
+                                else
+                                {
+                                    <option value="@item.SupplierID">@item.SupplierName</option>
+                                }
+                            }
+                        }
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Khoảng giá</label>
+                    <div class="input-group">
+                        <input type="text" name="minPrice" class="form-control number-separator" placeholder="Từ..." value="@ViewBag.MinPrice" />
+                        <span class="input-group-text">-</span>
+                        <input type="text" name="maxPrice" class="form-control number-separator" placeholder="Đến..." value="@ViewBag.MaxPrice" />
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Tên mặt hàng</label>
+                    <div class="input-group">
+                        <input type="text" name="searchValue" class="form-control" placeholder="Nhập tên mặt hàng..." value="@ViewBag.SearchValue" autofocus />
+                        <button class="btn btn-info d-flex align-items-center" type="submit">
+                            <i class="bi bi-search me-1"></i> Tìm kiếm
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="searchResult">
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // Sử dụng ViewBag.Page để khôi phục đúng trang đang đứng (Bookmark)
+            paginationSearch(null, document.getElementById("formSearch"), @ViewBag.Page);
+        });
+    </script>
+}

@@ -1,0 +1,103 @@
+﻿@model SV22T1020678.Models.Common.PagedResult<SV22T1020678.Models.Sales.OrderViewInfo>
+@{
+    Layout = null; // Cực kỳ quan trọng để ngắt layout cha
+}
+
+<div class="mb-2 text-muted">
+    Có <strong>@Model.RowCount</strong> đơn hàng
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover mb-0">
+                <thead class="table-secondary">
+                    <tr>
+                        <th>Khách hàng</th>
+                        <th>Ngày lập</th>
+                        <th>Nhân viên phụ trách</th>
+                        <th>Thời điểm duyệt</th>
+                        <th>Người giao hàng</th>
+                        <th>Ngày nhận giao hàng</th>
+                        <th>Thời điểm kết thúc</th>
+                        <th class="text-center">Trạng thái</th>
+                        <th class="text-center" style="width:100px;">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.DataItems)
+                    {
+                        <tr>
+                            <td class="align-middle"><strong>@item.CustomerName</strong></td>
+                            <td class="align-middle">@item.OrderTime.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td class="align-middle">@item.EmployeeName</td>
+                            <td class="align-middle">@item.AcceptTime?.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td class="align-middle">@item.ShipperName</td>
+                            <td class="align-middle">@item.ShippedTime?.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td class="align-middle">@item.FinishedTime?.ToString("dd/MM/yyyy HH:mm")</td>
+
+                            <td class="text-center align-middle">
+                                @if ((int)item.Status == 1)
+                                {
+                                    <span class="badge bg-warning text-dark">Chờ duyệt</span>
+                                }
+                                else if ((int)item.Status == 2)
+                                {
+                                    <span class="badge bg-info">Đã duyệt</span>
+                                }
+                                else if ((int)item.Status == 3)
+                                {
+                                    <span class="badge bg-primary">Đang giao</span>
+                                }
+                                else if ((int)item.Status == 4)
+                                {
+                                    <span class="badge bg-success">Hoàn tất</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger">Hủy / Từ chối</span>
+                                }
+                            </td>
+                            <td class="text-center align-middle">
+                                <a href="~/Order/Detail/@item.OrderID" class="btn btn-sm btn-info text-white" title="Chi tiết đơn hàng">
+                                    <i class="bi bi-info-circle"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    @if (Model.PageCount > 1)
+    {
+        <div class="card-footer">
+            <ul class="pagination justify-content-center m-0">
+                <li class="page-item @(Model.Page == 1 ? "disabled" : "")">
+                    <a class="page-link" href="javascript:;" onclick="doSearch(1)"><i class="bi bi-chevron-double-left"></i></a>
+                </li>
+                @{
+                    int delta = 2;
+                    int start = Math.Max(1, Model.Page - delta);
+                    int end = Math.Min(Model.PageCount, Model.Page + delta);
+
+                    if (end - start < 4)
+                    {
+                        if (start == 1) end = Math.Min(Model.PageCount, 5);
+                        else start = Math.Max(1, end - 4);
+                    }
+                }
+                @for (int i = start; i <= end; i++)
+                {
+                    <li class="page-item @(i == Model.Page ? "active" : "")">
+                        <a class="page-link" href="javascript:;" onclick="doSearch(@i)">@i</a>
+                    </li>
+                }
+                <li class="page-item @(Model.Page == Model.PageCount ? "disabled" : "")">
+                    <a class="page-link" href="javascript:;" onclick="doSearch(@Model.PageCount)"><i class="bi bi-chevron-double-right"></i></a>
+                </li>
+            </ul>
+        </div>
+    }
+</div>

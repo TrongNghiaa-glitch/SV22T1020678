@@ -1,0 +1,98 @@
+﻿@model SV22T1020678.Models.HR.Employee
+@{
+}
+@section PageToolBar {
+    <button type="submit" form="formEdit" class="btn btn-primary">
+        <i class="bi bi-save me-1"></i> Lưu dữ liệu
+    </button>
+    <a href="~/Employee" class="btn btn-secondary ms-1">
+        <i class="bi bi-arrow-left me-1"></i> Quay lại
+    </a>
+}
+
+<div class="row justify-content-center">
+    <div class="col-12">
+        <div class="card card-primary card-outline">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-person-badge me-2"></i> @ViewBag.Title
+                </h5>
+            </div>
+
+            <div class="card-body">
+                <form id="formEdit" method="post" enctype="multipart/form-data" action="~/Employee/Save">
+
+                    <input type="hidden" name="EmployeeID" value="@Model.EmployeeID" />
+
+                    <div class="row mb-3 align-items-center">
+                        <label class="col-sm-3 col-form-label">Họ và tên</label>
+                        <div class="col-sm-5">
+                            <input type="text" name="FullName" value="@Model.FullName" class="form-control" placeholder="Nhập họ và tên..." autofocus />
+                            @Html.ValidationMessage(nameof(Model.FullName), new { @class = "text-danger" })
+                        </div>
+                        <label class="col-sm-2 col-form-label text-end">Ngày sinh</label>
+                        <div class="col-sm-2">
+                            <input type="date" name="BirthDate" value="@(Model.BirthDate?.ToString("yyyy-MM-dd"))" class="form-control" />
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <label class="col-sm-3 col-form-label">Địa chỉ</label>
+                        <div class="col-sm-9">
+                            <textarea class="form-control" name="Address" rows="3" placeholder="Nhập địa chỉ...">@Model.Address</textarea>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3 align-items-center">
+                        <label class="col-sm-3 col-form-label">Điện thoại</label>
+                        <div class="col-sm-2">
+                            <input type="tel" name="Phone" value="@Model.Phone" class="form-control" placeholder="Số điện thoại..." />
+                        </div>
+                        <label class="col-sm-1 col-form-label text-end">Email</label>
+                        <div class="col-sm-6">
+                            <input type="email" name="Email" value="@Model.Email" class="form-control" placeholder="Email đăng nhập..." />
+                            @Html.ValidationMessage(nameof(Model.Email), new { @class = "text-danger" })
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <label class="col-sm-3 col-form-label">Ảnh đại diện</label>
+                        <div class="col-sm-9">
+                            <input type="hidden" name="Photo" value="@Model.Photo" />
+
+                            <input type="file" name="uploadPhoto" class="form-control" accept="image/*"
+                                   onchange="document.getElementById('imgPreview').src = window.URL.createObjectURL(this.files[0])" />
+
+                            <div class="mt-2">
+                                <img id="imgPreview"
+                                     src="~/images/employees/@(string.IsNullOrEmpty(Model.Photo) ? "nophoto.png" : Model.Photo)"
+                                     class="img-thumbnail"
+                                     style="height: 150px; width: 150px; object-fit: cover;" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3 align-items-center">
+                        <label class="col-sm-3 col-form-label">Trạng thái</label>
+                        <div class="col-sm-9">
+                            <div class="form-check form-switch mt-1">
+                                <input class="form-check-input" type="checkbox" id="IsWorking" name="IsWorking" value="true" @(Model.IsWorking == true ? "checked" : "") />
+                                <input type="hidden" name="IsWorking" value="false" />
+                                <label class="form-check-label text-primary" for="IsWorking">
+                                    Đang làm việc
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-sm-9 offset-3">
+                            @Html.ValidationSummary(false, "", new { @class = "text-danger" })
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

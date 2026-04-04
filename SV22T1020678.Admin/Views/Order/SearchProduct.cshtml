@@ -1,0 +1,74 @@
+﻿@model SV22T1020678.Models.Common.PagedResult<SV22T1020678.Models.Catalog.Product>
+@{
+    Layout = null; // Bắt buộc để không load lại giao diện cha
+}
+
+@if (Model.DataItems.Any())
+{
+    foreach (var item in Model.DataItems)
+    {
+        <form action="~/Order/AddToCart" method="post" class="formAddToCart border rounded p-2 mb-2 bg-light shadow-sm">
+            <input type="hidden" name="ProductID" value="@item.ProductID" />
+            <input type="hidden" name="ProductName" value="@item.ProductName" />
+            <input type="hidden" name="Photo" value="@item.Photo" />
+            <input type="hidden" name="Unit" value="@item.Unit" />
+
+            <div class="row align-items-center">
+                <div class="col-sm-3 text-center">
+                    @{
+                        string imageUrl = string.IsNullOrEmpty(item.Photo) ? "nophoto.png" : item.Photo;
+                    }
+                    <img src="~/images/products/@imageUrl" class="img-fluid border" style="max-height:80px" alt="@item.ProductName" />
+                </div>
+
+                <div class="col-sm-9">
+                    <h6 class="text-primary mb-1 fw-bold">@item.ProductName</h6>
+                    <div class="row mb-2">
+                        <div class="col-sm-6">
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text">Giá</span>
+                                <input type="number" class="form-control" name="SalePrice" value="@item.Price.ToString("0")" min="0" required />
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text">SL</span>
+                                <input type="number" class="form-control" name="Quantity" value="1" min="1" required />
+                                <span class="input-group-text">@item.Unit</span>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-sm btn-success w-100">
+                        <i class="bi bi-cart-plus"></i> Thêm vào giỏ
+                    </button>
+                </div>
+            </div>
+        </form>
+    }
+
+    if (Model.PageCount > 1)
+    {
+        <ul class="pagination pagination-sm justify-content-center mt-3">
+            @for (int p = 1; p <= Model.PageCount; p++)
+            {
+                if (p == Model.Page)
+                {
+                    <li class="page-item active"><a class="page-link" href="javascript:void(0);">@p</a></li>
+                }
+                else
+                {
+                    <li class="page-item">
+                        <a class="page-link" href="javascript:void(0);" onclick="doSearch(@p)">@p</a>
+                    </li>
+                }
+            }
+        </ul>
+    }
+}
+else
+{
+    <div class="text-center text-muted mt-4">
+        <i class="bi bi-box-seam fs-1"></i>
+        <p>Không tìm thấy mặt hàng nào!</p>
+    </div>
+}

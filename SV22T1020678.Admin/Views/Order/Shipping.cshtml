@@ -1,0 +1,36 @@
+﻿@model int
+@{
+    Layout = null;
+}
+<div class="modal-header text-bg-info">
+    <strong class="modal-title">Chọn người giao hàng</strong>
+    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+</div>
+<form action="~/Order/Shipping" method="post">
+    <input type="hidden" name="id" value="@Model" />
+    <div class="modal-body">
+        <div class="row">
+            <div class="col-12">
+                <label class="form-label mb-2">Người giao hàng</label>
+                <select class="form-select" name="shipperID" required>
+                    <option value="">-- Chọn người giao hàng ---</option>
+                    @if (ViewBag.Shippers != null)
+                    {
+                        foreach (var shipper in ViewBag.Shippers)
+                        {
+                            <option value="@shipper.ShipperID">@shipper.ShipperName</option>
+                        }
+                    }
+                    else
+                    {
+                        <option value="" disabled>Lỗi: Không tải được danh sách Shipper</option>
+                    }
+                </select>
+            </div>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="submit" class="btn btn-primary"><i class="bi bi-bicycle"></i> Xác nhận Giao hàng</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+    </div>
+</form>

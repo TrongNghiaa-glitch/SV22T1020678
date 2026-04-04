@@ -1,0 +1,47 @@
+﻿@model SV22T1020678.Models.Common.PaginationSearchInput
+@{
+    ViewBag.Title = "Quản lý Nhân viên";
+}
+@section PageToolBar {
+    <a href="~/Employee/Create" class="btn btn-primary"><i class="bi bi-plus-circle me-1"></i> Bổ sung</a>
+}
+
+<div class="card mb-3">
+    <div class="card-body">
+        <form id="formSearch" action="~/Employee/Search" method="post" onsubmit="event.preventDefault(); doSearch(1);">
+            <input type="hidden" name="PageSize" value="@Model.PageSize" />
+
+            <div class="input-group">
+                <input type="text" class="form-control" name="SearchValue" value="@Model.SearchValue" placeholder="Tên nhân viên, email..." autofocus />
+                <button type="submit" class="btn btn-info d-flex align-items-center">
+                    <i class="bi bi-search me-1"></i> Tìm kiếm
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="searchResult"></div>
+
+@section Scripts {
+    <script>
+        function doSearch(page) {
+            var searchCondition = $("#formSearch").serializeArray();
+            searchCondition.push({ name: "Page", value: page });
+
+            $.ajax({
+                url: $("#formSearch").prop("action"),
+                type: $("#formSearch").prop("method"),
+                data: searchCondition,
+                success: function (data) {
+                    $("#searchResult").html(data);
+                }
+            });
+        }
+
+        $(document).ready(function () {
+            // Tự động tìm kiếm lần đầu khi mở trang
+            doSearch(@Model.Page);
+        });
+    </script>
+}

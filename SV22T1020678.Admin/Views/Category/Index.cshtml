@@ -1,0 +1,55 @@
+﻿@{
+    ViewBag.Title = "Quản lý Loại hàng";
+}
+
+@section PageToolBar {
+    <a href="~/Category/Create" class="btn btn-primary d-flex align-items-center ms-1">
+        <i class="bi bi-plus-circle me-1"></i> Bổ sung
+    </a>
+}
+
+<div class="card mb-3">
+    <div class="card-body">
+        <form id="formSearch" action="~/Category/Search" method="post" onsubmit="doSearch(1); return false;">
+
+            <input type="hidden" name="Page" id="Page" value="@ViewBag.Page" />
+
+            <div class="input-group">
+                <input type="text" class="form-control" name="SearchValue"
+                       value="@ViewBag.SearchValue"
+                       placeholder="Nhập tên loại hàng cần tìm..." autofocus />
+
+                <button type="submit" class="btn btn-info d-flex align-items-center">
+                    <i class="bi bi-search me-1"></i> Tìm kiếm
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="searchResult"></div>
+
+@section Scripts {
+    <script>
+        function doSearch(page) {
+            var searchCondition = $("#formSearch").serializeArray();
+            searchCondition.push({ name: "Page", value: page });
+
+            $.ajax({
+                url: $("#formSearch").prop("action"),
+                type: $("#formSearch").prop("method"),
+                data: searchCondition,
+                success: function (data) {
+                    $("#searchResult").html(data);
+                },
+                error: function () {
+                    alert("Lỗi kết nối tới Server!");
+                }
+            });
+        }
+
+        $(document).ready(function () {
+            doSearch(@ViewBag.Page);
+        });
+    </script>
+}
