@@ -33,9 +33,33 @@
                                 <label class="form-label fw-bold">Email (Không được sửa)</label>
                                 <input type="text" class="form-control bg-light" value="@Model.Email" readonly>
                             </div>
-                            <div class="col-12">
+
+                            <div class="col-md-6">
                                 <label class="form-label fw-bold">Địa chỉ</label>
                                 <input type="text" name="Address" value="@Model.Address" class="form-control">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Tỉnh/Thành phố</label>
+                                <select name="Province" class="form-select" required>
+                                    <option value="">-- Chọn Tỉnh/Thành phố --</option>
+                                    @if (ViewBag.Provinces != null)
+                                    {
+                                        foreach (var p in ViewBag.Provinces)
+                                        {
+                                            // p ở đây là chuỗi tên tỉnh lấy từ GetProvincesAsync
+                                            if (p == Model.Province)
+                                            {
+                                                <option value="@p" selected>@p</option>
+                                            }
+                                            else
+                                            {
+                                                <option value="@p">@p</option>
+                                            }
+                                        }
+                                    }
+                                </select>
+                                <div class="small text-muted">Vui lòng chọn tỉnh thành để tránh lỗi lưu dữ liệu.</div>
                             </div>
                         </div>
                         <button type="submit" class="btn btn-primary mt-4 px-4 rounded-pill">Lưu thay đổi</button>
@@ -57,7 +81,7 @@
                     <form action="~/Account/ChangePassword" method="post">
                         <div class="mb-3">
                             <label class="form-label">Mật khẩu hiện tại</label>
-                            <input type="password" name="oldPassword" class="form-control" required>
+                            <input type="password" name="oldPassword" class="form-control">
                         </div>
                         <hr />
                         <div class="mb-3">

@@ -233,10 +233,11 @@ namespace SV22T1020678.BusinessLayers
         {
             return await customerDB.AddAsync(data);
         }
+
         /// <summary>
         /// Lấy danh sách tên các Tỉnh/Thành
         /// </summary>
-        public static async Task<List<string>> ListProvincesAsync()
+        public static async Task<List<string>> GetProvincesAsync()
         {
             return await customerDB.GetProvincesAsync();
         }

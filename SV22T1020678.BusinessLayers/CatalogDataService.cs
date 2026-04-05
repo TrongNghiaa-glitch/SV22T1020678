@@ -55,6 +55,11 @@ namespace SV22T1020678.BusinessLayers
         public static async Task<long> AddAttributeAsync(ProductAttribute data) => await productDB.AddAttributeAsync(data);
         public static async Task<bool> UpdateAttributeAsync(ProductAttribute data) => await productDB.UpdateAttributeAsync(data);
         public static async Task<bool> DeleteAttributeAsync(long attributeId) => await productDB.DeleteAttributeAsync(attributeId);
+
+        public static dynamic ListOfProvinces()
+        {
+            throw new NotImplementedException();
+        }
         #endregion
     }
 }

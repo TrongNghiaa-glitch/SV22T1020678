@@ -54,14 +54,27 @@
             </button>
 
             <div class="collapse navbar-collapse" id="navbarShop">
-                <form class="d-flex mx-auto w-50" action="~/Home/Index" method="get">
-                    <input class="form-control me-2 rounded-pill px-3" type="search" name="searchValue" placeholder="Bạn muốn tìm mua gì hôm nay?" aria-label="Search">
-                    <button class="btn btn-primary rounded-pill px-3" type="submit">
-                        <i class="bi bi-search"></i>
-                    </button>
-                </form>
+
+                <div class="mx-auto text-center d-none d-lg-block">
+                    <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-3 py-2 me-2 border border-primary">
+                        <i class="bi bi-truck fs-6 me-1"></i> Freeship từ 500k
+                    </span>
+                    <span class="badge bg-danger bg-opacity-10 text-danger rounded-pill px-3 py-2 me-2 border border-danger">
+                        <i class="bi bi-shield-check fs-6 me-1"></i> Chính hãng 100%
+                    </span>
+                    <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3 py-2 border border-success">
+                        <i class="bi bi-arrow-repeat fs-6 me-1"></i> Đổi trả 7 ngày
+                    </span>
+                </div>
 
                 <ul class="navbar-nav ms-auto align-items-center">
+
+                    <li class="nav-item me-4">
+                        <a href="~/Cart" class="btn btn-outline-primary rounded-pill px-4 fw-bold shadow-sm">
+                            <i class="bi bi-cart3 fs-5 me-1"></i> Giỏ hàng
+                        </a>
+                    </li>
+
                     @if (User.Identity.IsAuthenticated)
                     {
                         <li class="nav-item dropdown">
@@ -90,8 +103,8 @@
                     }
                     else
                     {
-                        <li class="nav-item me-3">
-                            <a class="nav-link text-dark fw-bold" href="~/Account/Login">
+                        <li class="nav-item">
+                            <a class="nav-link text-dark fw-bold btn btn-light rounded-pill px-4 shadow-sm" href="~/Account/Login">
                                 <i class="bi bi-person-circle"></i> Đăng nhập
                             </a>
                         </li>

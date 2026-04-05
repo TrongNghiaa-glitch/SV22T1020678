@@ -18,12 +18,10 @@ namespace SV22T1020678.Shop.Controllers
         [HttpPost]
         public async Task<IActionResult> Login(string username, string password)
         {
-            // GỌI HÀM "TRIỆT ĐỂ" VỪA TẠO
             var customer = await PartnerDataService.GetCustomerByEmailAsync(username);
 
-            // Bổ sung kiểm tra Mật khẩu (Giả sử trong DB bạn có cột Password)
-            // LƯU Ý: Nếu bảng Customers của bạn CHƯA có cột Password, bạn cứ bỏ đoạn && customer.Password == password đi nhé
-            if (customer != null && customer.Email == username /* && customer.Password == password */)
+            // Kiểm tra thông tin đăng nhập
+            if (customer != null && customer.Email == username && customer.Password == password)
             {
                 var claims = new List<Claim> {
                     new Claim(ClaimTypes.Name, customer.CustomerName ?? ""),
@@ -50,23 +48,22 @@ namespace SV22T1020678.Shop.Controllers
         [HttpGet]
         public async Task<IActionResult> Register()
         {
-            // Truyền danh sách tỉnh thành ra View thông qua ViewBag
-            ViewBag.Provinces = await PartnerDataService.ListProvincesAsync();
+            // Sử dụng GetProvincesAsync từ PartnerDataService
+            ViewBag.Provinces = CatalogDataService.ListOfProvinces();
             return View();
         }
+
         [HttpPost]
         public async Task<IActionResult> Register(Customer data)
         {
             try
             {
-                // 1. Kiểm tra các trường bắt buộc
                 if (string.IsNullOrWhiteSpace(data.CustomerName) || string.IsNullOrWhiteSpace(data.Email))
                 {
                     ViewBag.Error = "Vui lòng nhập đầy đủ Tên và Email!";
-                    return View(data); // Trả lại form kèm dữ liệu cũ để khách không phải gõ lại
+                    return View(data);
                 }
 
-                // 2. Kiểm tra xem Email này đã có ai dùng chưa (Dùng hàm IsValidEmailAsync bạn đã viết ở Repo)
                 bool isEmailValid = await PartnerDataService.IsValidEmailAsync(data.Email, 0);
                 if (!isEmailValid)
                 {
@@ -74,15 +71,11 @@ namespace SV22T1020678.Shop.Controllers
                     return View(data);
                 }
 
-                // 3. Gán giá trị mặc định cho tài khoản mới
                 data.IsLocked = false;
-
-                // 4. Lưu vào Database
                 int newCustomerId = await PartnerDataService.AddCustomerAsync(data);
 
                 if (newCustomerId > 0)
                 {
-                    // Đăng ký thành công thì đẩy thẳng về trang Đăng nhập
                     return RedirectToAction("Login");
                 }
 
@@ -91,50 +84,112 @@ namespace SV22T1020678.Shop.Controllers
             }
             catch (Exception ex)
             {
-                // Bắt lỗi hệ thống (ví dụ sập DB)
                 ViewBag.Error = "Lỗi hệ thống: " + ex.Message;
                 return View(data);
             }
         }
+
         [Authorize]
         public async Task<IActionResult> Profile()
         {
-            // 1. Lấy ID từ ClaimIdentifier (Cách này chắc chắn hơn lấy Name/Email)
-            var userIdClaim = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
-
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (int.TryParse(userIdClaim, out int customerId))
             {
-                // 2. Gọi hàm lấy theo ID (hàm GetAsync đã có sẵn trong PartnerDataService)
-                var customer = await PartnerDataService.GetCustomerAsync(customerId);
+                var current = await PartnerDataService.GetCustomerAsync(customerId);
 
-                if (customer != null)
-                    return View(customer);
+                // LẤY DANH SÁCH TỪ REPO (Đảm bảo khớp 100% với khóa ngoại)
+                ViewBag.Provinces = await PartnerDataService.GetProvincesAsync();
+
+                return View(current);
             }
-
-            // Nếu không tìm thấy, đá về trang chủ hoặc báo lỗi
-            return RedirectToAction("Index", "Home");
+            return RedirectToAction("Login");
         }
 
         [HttpPost]
         [Authorize]
         public async Task<IActionResult> ChangePassword(string oldPassword, string newPassword, string confirmPassword)
         {
-            var current = await PartnerDataService.GetCustomerByEmailAsync(User.Identity!.Name!);
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            if (current?.Password != oldPassword)
+            if (int.TryParse(userIdClaim, out int customerId))
             {
-                TempData["Error"] = "Mật khẩu cũ không chính xác!";
-            }
-            else if (newPassword != confirmPassword)
-            {
-                TempData["Error"] = "Xác nhận mật khẩu mới không khớp!";
+                var current = await PartnerDataService.GetCustomerAsync(customerId);
+
+                if (current != null)
+                {
+                    string dbPass = (current.Password ?? "").Trim();
+                    string inputOldPass = (oldPassword ?? "").Trim();
+
+                    bool isOldAccount = string.IsNullOrEmpty(dbPass);
+
+                    if (!isOldAccount && dbPass != inputOldPass)
+                    {
+                        TempData["Error"] = "Mật khẩu hiện tại không chính xác!";
+                    }
+                    else if ((newPassword ?? "").Trim() != (confirmPassword ?? "").Trim())
+                    {
+                        TempData["Error"] = "Xác nhận mật khẩu mới không khớp!";
+                    }
+                    else if (string.IsNullOrEmpty((newPassword ?? "").Trim()))
+                    {
+                        TempData["Error"] = "Vui lòng nhập mật khẩu mới!";
+                    }
+                    else
+                    {
+                        current.Password = newPassword.Trim();
+                        await PartnerDataService.UpdateCustomerAsync(current);
+                        TempData["Message"] = "Đổi mật khẩu thành công!";
+                    }
+                }
             }
             else
             {
-                current.Password = newPassword;
-                await PartnerDataService.UpdateCustomerAsync(current);
-                TempData["Message"] = "Đổi mật khẩu thành công!";
+                TempData["Error"] = "Lỗi xác thực người dùng. Vui lòng đăng nhập lại!";
             }
+
+            return RedirectToAction("Profile");
+        }
+
+        [HttpPost]
+        [Authorize]
+        public async Task<IActionResult> UpdateProfile(Customer data)
+        {
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (int.TryParse(userIdClaim, out int customerId))
+            {
+                var current = await PartnerDataService.GetCustomerAsync(customerId);
+
+                if (current != null)
+                {
+                    current.CustomerName = data.CustomerName ?? current.CustomerName;
+                    current.ContactName = data.ContactName ?? current.ContactName;
+                    current.Phone = data.Phone ?? current.Phone;
+                    current.Address = data.Address ?? current.Address;
+
+                    if (!string.IsNullOrEmpty(data.Province))
+                    {
+                        current.Province = data.Province;
+                    }
+
+                    await PartnerDataService.UpdateCustomerAsync(current);
+
+                    var claims = new List<Claim>
+                    {
+                        new Claim(ClaimTypes.Name, current.CustomerName),
+                        new Claim(ClaimTypes.Email, current.Email),
+                        new Claim(ClaimTypes.NameIdentifier, current.CustomerID.ToString())
+                    };
+
+                    var identity = new ClaimsIdentity(claims, "AdminWebAuth");
+                    var principal = new ClaimsPrincipal(identity);
+
+                    await HttpContext.SignInAsync("AdminWebAuth", principal);
+
+                    TempData["Message"] = "Cập nhật thông tin thành công!";
+                }
+            }
+
             return RedirectToAction("Profile");
         }
     }

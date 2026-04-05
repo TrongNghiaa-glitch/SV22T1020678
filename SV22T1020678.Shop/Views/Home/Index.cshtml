@@ -67,3 +67,89 @@
         </div>
     }
 </div>
+@if (Model.PageCount > 1)
+{
+    <style>
+        .pagination-circular .page-item {
+            margin: 0 4px;
+        }
+
+        .pagination-circular .page-link {
+            border-radius: 50% !important; /* Bo tròn tuyệt đối */
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 500;
+            color: #495057;
+            border: 1px solid #dee2e6;
+            transition: all 0.2s;
+        }
+
+        .pagination-circular .page-item.active .page-link {
+            background-color: #0d6efd;
+            border-color: #0d6efd;
+            color: #fff;
+            box-shadow: 0 3px 6px rgba(13,110,253,0.3);
+        }
+
+        .pagination-circular .page-link:hover:not(.active) {
+            background-color: #e9ecef;
+        }
+
+        .pagination-circular .page-item.disabled .page-link {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    </style>
+
+    int currentPage = Model.Page;
+    int totalPages = Model.PageCount;
+    int maxPagesToShow = 5;
+
+    int startPage = Math.Max(1, currentPage - maxPagesToShow / 2);
+    int endPage = Math.Min(totalPages, currentPage + maxPagesToShow / 2);
+
+    if (startPage == 1) { endPage = Math.Min(totalPages, maxPagesToShow); }
+    if (endPage == totalPages) { startPage = Math.Max(1, totalPages - maxPagesToShow + 1); }
+
+    <div class="d-flex justify-content-center mt-5 mb-5">
+        <ul class="pagination pagination-circular shadow-sm">
+
+            <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                <a class="page-link" href="~/?categoryId=@searchInput?.CategoryID&supplierId=@searchInput?.SupplierID&minPrice=@(searchInput?.MinPrice == 0 ? "" : searchInput?.MinPrice)&maxPrice=@(searchInput?.MaxPrice == 0 ? "" : searchInput?.MaxPrice)&searchValue=@searchInput?.SearchValue&page=1" title="Trang đầu">
+                    &lt;&lt;
+                </a>
+            </li>
+
+            <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                <a class="page-link" href="~/?categoryId=@searchInput?.CategoryID&supplierId=@searchInput?.SupplierID&minPrice=@(searchInput?.MinPrice == 0 ? "" : searchInput?.MinPrice)&maxPrice=@(searchInput?.MaxPrice == 0 ? "" : searchInput?.MaxPrice)&searchValue=@searchInput?.SearchValue&page=@(currentPage - 1)" title="Trang trước">
+                    &lt;
+                </a>
+            </li>
+
+            @for (int i = startPage; i <= endPage; i++)
+            {
+                <li class="page-item @(i == currentPage ? "active" : "")">
+                    <a class="page-link" href="~/?categoryId=@searchInput?.CategoryID&supplierId=@searchInput?.SupplierID&minPrice=@(searchInput?.MinPrice == 0 ? "" : searchInput?.MinPrice)&maxPrice=@(searchInput?.MaxPrice == 0 ? "" : searchInput?.MaxPrice)&searchValue=@searchInput?.SearchValue&page=@i">
+                        @i
+                    </a>
+                </li>
+            }
+
+            <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                <a class="page-link" href="~/?categoryId=@searchInput?.CategoryID&supplierId=@searchInput?.SupplierID&minPrice=@(searchInput?.MinPrice == 0 ? "" : searchInput?.MinPrice)&maxPrice=@(searchInput?.MaxPrice == 0 ? "" : searchInput?.MaxPrice)&searchValue=@searchInput?.SearchValue&page=@(currentPage + 1)" title="Trang sau">
+                    &gt;
+                </a>
+            </li>
+
+            <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                <a class="page-link" href="~/?categoryId=@searchInput?.CategoryID&supplierId=@searchInput?.SupplierID&minPrice=@(searchInput?.MinPrice == 0 ? "" : searchInput?.MinPrice)&maxPrice=@(searchInput?.MaxPrice == 0 ? "" : searchInput?.MaxPrice)&searchValue=@searchInput?.SearchValue&page=@totalPages" title="Trang cuối">
+                    &gt;&gt;
+                </a>
+            </li>
+
+        </ul>
+    </div>
+}

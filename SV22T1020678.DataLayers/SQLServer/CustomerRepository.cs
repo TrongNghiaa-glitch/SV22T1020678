@@ -21,9 +21,10 @@ namespace SV22T1020678.DataLayers.SQLServer
         public async Task<int> AddAsync(Customer data)
         {
             using var connection = new SqlConnection(_connectionString);
+            // ĐÃ BỔ SUNG CỘT PASSWORD
             string sql = @"
-                INSERT INTO Customers (CustomerName, ContactName, Province, Address, Phone, Email, IsLocked)
-                VALUES (@CustomerName, @ContactName, @Province, @Address, @Phone, @Email, @IsLocked);
+                INSERT INTO Customers (CustomerName, ContactName, Province, Address, Phone, Email, Password, IsLocked)
+                VALUES (@CustomerName, @ContactName, @Province, @Address, @Phone, @Email, @Password, @IsLocked);
                 SELECT CAST(SCOPE_IDENTITY() AS INT);";
             return await connection.ExecuteScalarAsync<int>(sql, data);
         }
@@ -118,6 +119,7 @@ namespace SV22T1020678.DataLayers.SQLServer
         public async Task<bool> UpdateAsync(Customer data)
         {
             using var connection = new SqlConnection(_connectionString);
+            // ĐÃ BỔ SUNG CẬP NHẬT CỘT PASSWORD
             string sql = @"
                 UPDATE Customers
                 SET CustomerName = @CustomerName,
@@ -126,6 +128,7 @@ namespace SV22T1020678.DataLayers.SQLServer
                     Address = @Address,
                     Phone = @Phone,
                     Email = @Email,
+                    Password = @Password,
                     IsLocked = @IsLocked
                 WHERE CustomerID = @CustomerID";
             int rowsAffected = await connection.ExecuteAsync(sql, data);
@@ -142,6 +145,7 @@ namespace SV22T1020678.DataLayers.SQLServer
             int count = await connection.ExecuteScalarAsync<int>(sql, new { Email = email, id = id });
             return count == 0;
         }
+
         public async Task<List<string>> GetProvincesAsync()
         {
             using var connection = new SqlConnection(_connectionString);
