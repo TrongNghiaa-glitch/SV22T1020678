@@ -54,7 +54,16 @@ namespace SV22T1020678.DataLayers.SQLServer
 
             string searchCondition = $"%{input.SearchValue}%";
 
-            // 1. Đếm tổng số dòng (Đã bổ sung lọc theo Giá)
+            // --- ĐÃ BỔ SUNG: Xử lý logic sắp xếp (SortOrder) ---
+            string orderClause = "ProductName ASC"; // Mặc định sắp xếp theo Tên A-Z
+            if (!string.IsNullOrEmpty(input.SortOrder))
+            {
+                if (input.SortOrder == "PriceASC") orderClause = "Price ASC";
+                else if (input.SortOrder == "PriceDESC") orderClause = "Price DESC";
+                else if (input.SortOrder == "NameDESC") orderClause = "ProductName DESC";
+            }
+
+            // 1. Đếm tổng số dòng (Giữ nguyên)
             string sqlCount = @"
                 SELECT COUNT(*) 
                 FROM Products 
@@ -69,22 +78,22 @@ namespace SV22T1020678.DataLayers.SQLServer
                 SearchValue = searchCondition,
                 CategoryID = input.CategoryID,
                 SupplierID = input.SupplierID,
-                MinPrice = input.MinPrice, // Truyền giá trị MinPrice xuống SQL
-                MaxPrice = input.MaxPrice  // Truyền giá trị MaxPrice xuống SQL
+                MinPrice = input.MinPrice,
+                MaxPrice = input.MaxPrice
             });
 
-            // 2. Lấy dữ liệu (Đã bổ sung lọc theo Giá)
+            // 2. Lấy dữ liệu (Đã đổi sang $@ để chèn biến orderClause vào SQL)
             string sqlData = "";
             if (input.PageSize == 0)
             {
-                sqlData = @"
+                sqlData = $@"
                     SELECT * FROM Products 
                     WHERE (@SearchValue = N'%%' OR ProductName LIKE @SearchValue)
                       AND (@CategoryID = 0 OR CategoryID = @CategoryID)
                       AND (@SupplierID = 0 OR SupplierID = @SupplierID)
                       AND (Price >= @MinPrice)
                       AND (@MaxPrice = 0 OR Price <= @MaxPrice)
-                    ORDER BY ProductName";
+                    ORDER BY {orderClause}"; // <--- Đã sửa dòng này
                 var data = await connection.QueryAsync<Product>(sqlData, new
                 {
                     SearchValue = searchCondition,
@@ -97,15 +106,15 @@ namespace SV22T1020678.DataLayers.SQLServer
             }
             else
             {
-                sqlData = @"
+                sqlData = $@"
                     SELECT * FROM Products 
                     WHERE (@SearchValue = N'%%' OR ProductName LIKE @SearchValue)
                       AND (@CategoryID = 0 OR CategoryID = @CategoryID)
                       AND (@SupplierID = 0 OR SupplierID = @SupplierID)
                       AND (Price >= @MinPrice)
                       AND (@MaxPrice = 0 OR Price <= @MaxPrice)
-                    ORDER BY ProductName
-                    OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY";
+                    ORDER BY {orderClause} 
+                    OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY"; // <--- Đã sửa dòng này
                 var data = await connection.QueryAsync<Product>(sqlData, new
                 {
                     SearchValue = searchCondition,

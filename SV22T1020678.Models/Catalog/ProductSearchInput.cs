@@ -28,5 +28,6 @@ namespace SV22T1020678.Models.Catalog
         /// Mức giá tối đa (0 nếu bỏ qua)
         /// </summary>
         public decimal MaxPrice { get; set; }
+        public string SortOrder { get; set; } = "NameASC";
     }
 }

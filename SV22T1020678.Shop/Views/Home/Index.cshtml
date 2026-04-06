@@ -7,7 +7,7 @@
 <div class="card shadow-sm border-0 mb-4 p-3 rounded-4 bg-light">
     <form action="~/" method="get">
         <div class="row g-2 align-items-center">
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <select class="form-select rounded-pill" name="categoryId">
                     <option value="0">-- Tất cả loại hàng --</option>
                     @if (ViewBag.Categories != null)
@@ -26,7 +26,7 @@
                     }
                 </select>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <input type="text" name="searchValue" value="@searchInput?.SearchValue" class="form-control rounded-pill" placeholder="Tên sản phẩm...">
             </div>
             <div class="col-md-2">
@@ -35,6 +35,47 @@
             <div class="col-md-2">
                 <input type="number" name="maxPrice" value="@(searchInput?.MaxPrice == 0 ? "" : searchInput?.MaxPrice)" class="form-control rounded-pill" placeholder="Đến giá...">
             </div>
+
+            <div class="col-md-2">
+                <select class="form-select rounded-pill" name="sortOrder" onchange="this.form.submit()">
+                    @if (string.IsNullOrEmpty(searchInput?.SortOrder) || searchInput?.SortOrder == "NameASC")
+                    {
+                        <option value="NameASC" selected>Tên A-Z</option>
+                    }
+                    else
+                    {
+                        <option value="NameASC">Tên A-Z</option>
+                    }
+
+                    @if (searchInput?.SortOrder == "NameDESC")
+                    {
+                        <option value="NameDESC" selected>Tên Z-A</option>
+                    }
+                    else
+                    {
+                        <option value="NameDESC">Tên Z-A</option>
+                    }
+
+                    @if (searchInput?.SortOrder == "PriceASC")
+                    {
+                        <option value="PriceASC" selected>Giá tăng dần</option>
+                    }
+                    else
+                    {
+                        <option value="PriceASC">Giá tăng dần</option>
+                    }
+
+                    @if (searchInput?.SortOrder == "PriceDESC")
+                    {
+                        <option value="PriceDESC" selected>Giá giảm dần</option>
+                    }
+                    else
+                    {
+                        <option value="PriceDESC">Giá giảm dần</option>
+                    }
+                </select>
+            </div>
+
             <div class="col-md-2">
                 <button type="submit" class="btn btn-primary rounded-pill w-100 fw-bold"><i class="bi bi-search"></i> Tìm kiếm</button>
             </div>
@@ -67,6 +108,7 @@
         </div>
     }
 </div>
+
 @if (Model.PageCount > 1)
 {
     <style>
@@ -118,13 +160,13 @@
         <ul class="pagination pagination-circular shadow-sm">
 
             <li class="page-item @(currentPage == 1 ? "disabled" : "")">
-                <a class="page-link" href="~/?categoryId=@searchInput?.CategoryID&supplierId=@searchInput?.SupplierID&minPrice=@(searchInput?.MinPrice == 0 ? "" : searchInput?.MinPrice)&maxPrice=@(searchInput?.MaxPrice == 0 ? "" : searchInput?.MaxPrice)&searchValue=@searchInput?.SearchValue&page=1" title="Trang đầu">
+                <a class="page-link" href="~/?categoryId=@searchInput?.CategoryID&supplierId=@searchInput?.SupplierID&minPrice=@(searchInput?.MinPrice == 0 ? "" : searchInput?.MinPrice)&maxPrice=@(searchInput?.MaxPrice == 0 ? "" : searchInput?.MaxPrice)&searchValue=@searchInput?.SearchValue&sortOrder=@searchInput?.SortOrder&page=1" title="Trang đầu">
                     &lt;&lt;
                 </a>
             </li>
 
             <li class="page-item @(currentPage == 1 ? "disabled" : "")">
-                <a class="page-link" href="~/?categoryId=@searchInput?.CategoryID&supplierId=@searchInput?.SupplierID&minPrice=@(searchInput?.MinPrice == 0 ? "" : searchInput?.MinPrice)&maxPrice=@(searchInput?.MaxPrice == 0 ? "" : searchInput?.MaxPrice)&searchValue=@searchInput?.SearchValue&page=@(currentPage - 1)" title="Trang trước">
+                <a class="page-link" href="~/?categoryId=@searchInput?.CategoryID&supplierId=@searchInput?.SupplierID&minPrice=@(searchInput?.MinPrice == 0 ? "" : searchInput?.MinPrice)&maxPrice=@(searchInput?.MaxPrice == 0 ? "" : searchInput?.MaxPrice)&searchValue=@searchInput?.SearchValue&sortOrder=@searchInput?.SortOrder&page=@(currentPage - 1)" title="Trang trước">
                     &lt;
                 </a>
             </li>
@@ -132,20 +174,20 @@
             @for (int i = startPage; i <= endPage; i++)
             {
                 <li class="page-item @(i == currentPage ? "active" : "")">
-                    <a class="page-link" href="~/?categoryId=@searchInput?.CategoryID&supplierId=@searchInput?.SupplierID&minPrice=@(searchInput?.MinPrice == 0 ? "" : searchInput?.MinPrice)&maxPrice=@(searchInput?.MaxPrice == 0 ? "" : searchInput?.MaxPrice)&searchValue=@searchInput?.SearchValue&page=@i">
+                    <a class="page-link" href="~/?categoryId=@searchInput?.CategoryID&supplierId=@searchInput?.SupplierID&minPrice=@(searchInput?.MinPrice == 0 ? "" : searchInput?.MinPrice)&maxPrice=@(searchInput?.MaxPrice == 0 ? "" : searchInput?.MaxPrice)&searchValue=@searchInput?.SearchValue&sortOrder=@searchInput?.SortOrder&page=@i">
                         @i
                     </a>
                 </li>
             }
 
             <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
-                <a class="page-link" href="~/?categoryId=@searchInput?.CategoryID&supplierId=@searchInput?.SupplierID&minPrice=@(searchInput?.MinPrice == 0 ? "" : searchInput?.MinPrice)&maxPrice=@(searchInput?.MaxPrice == 0 ? "" : searchInput?.MaxPrice)&searchValue=@searchInput?.SearchValue&page=@(currentPage + 1)" title="Trang sau">
+                <a class="page-link" href="~/?categoryId=@searchInput?.CategoryID&supplierId=@searchInput?.SupplierID&minPrice=@(searchInput?.MinPrice == 0 ? "" : searchInput?.MinPrice)&maxPrice=@(searchInput?.MaxPrice == 0 ? "" : searchInput?.MaxPrice)&searchValue=@searchInput?.SearchValue&sortOrder=@searchInput?.SortOrder&page=@(currentPage + 1)" title="Trang sau">
                     &gt;
                 </a>
             </li>
 
             <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
-                <a class="page-link" href="~/?categoryId=@searchInput?.CategoryID&supplierId=@searchInput?.SupplierID&minPrice=@(searchInput?.MinPrice == 0 ? "" : searchInput?.MinPrice)&maxPrice=@(searchInput?.MaxPrice == 0 ? "" : searchInput?.MaxPrice)&searchValue=@searchInput?.SearchValue&page=@totalPages" title="Trang cuối">
+                <a class="page-link" href="~/?categoryId=@searchInput?.CategoryID&supplierId=@searchInput?.SupplierID&minPrice=@(searchInput?.MinPrice == 0 ? "" : searchInput?.MinPrice)&maxPrice=@(searchInput?.MaxPrice == 0 ? "" : searchInput?.MaxPrice)&searchValue=@searchInput?.SearchValue&sortOrder=@searchInput?.SortOrder&page=@totalPages" title="Trang cuối">
                     &gt;&gt;
                 </a>
             </li>

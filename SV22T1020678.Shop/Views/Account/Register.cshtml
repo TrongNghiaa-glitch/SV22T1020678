@@ -42,15 +42,16 @@
                                 <option value="">-- Chọn Tỉnh/Thành --</option>
                                 @if (ViewBag.Provinces != null)
                                 {
-                                    foreach (string provinceName in ViewBag.Provinces)
+                                    // ĐÃ SỬA: Thay string bằng var, và gọi đúng thuộc tính ProvinceName
+                                    foreach (var item in ViewBag.Provinces)
                                     {
-                                        if (provinceName == Model?.Province)
+                                        if (item.ProvinceName == Model?.Province)
                                         {
-                                            <option value="@provinceName" selected>@provinceName</option>
+                                            <option value="@item.ProvinceName" selected>@item.ProvinceName</option>
                                         }
                                         else
                                         {
-                                            <option value="@provinceName">@provinceName</option>
+                                            <option value="@item.ProvinceName">@item.ProvinceName</option>
                                         }
                                     }
                                 }

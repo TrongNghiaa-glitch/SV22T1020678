@@ -2,6 +2,7 @@
 using SV22T1020678.DataLayers.SQLServer;
 using SV22T1020678.Models.Catalog;
 using SV22T1020678.Models.Common;
+using SV22T1020678.Models.DataDictionary;
 
 namespace SV22T1020678.BusinessLayers
 {
@@ -9,11 +10,17 @@ namespace SV22T1020678.BusinessLayers
     {
         private static readonly IProductRepository productDB;
         private static readonly IGenericRepository<Category> categoryDB;
+        // Sửa dòng này: Gọi trực tiếp lớp ProvinceRepository
+        private static readonly ProvinceRepository provinceDB;
+
 
         static CatalogDataService()
         {
-            productDB = new ProductRepository(Configuration.ConnectionString);
-            categoryDB = new CategoryRepository(Configuration.ConnectionString);
+            string connectionString = Configuration.ConnectionString;
+            productDB = new ProductRepository(connectionString);
+            categoryDB = new CategoryRepository(connectionString);
+            // Khởi tạo bình thường
+            provinceDB = new ProvinceRepository(connectionString);
         }
 
         #region Nghiệp vụ Loại hàng (Category)
@@ -35,7 +42,6 @@ namespace SV22T1020678.BusinessLayers
         public static async Task<bool> UpdateProductAsync(Product data) => await productDB.UpdateAsync(data);
         public static async Task<bool> DeleteProductAsync(int id)
         {
-            // ĐÃ SỬA TẠI ĐÂY: InUsedAsync -> IsUsedAsync
             if (await productDB.IsUsedAsync(id)) return false;
             return await productDB.DeleteAsync(id);
         }
@@ -55,11 +61,12 @@ namespace SV22T1020678.BusinessLayers
         public static async Task<long> AddAttributeAsync(ProductAttribute data) => await productDB.AddAttributeAsync(data);
         public static async Task<bool> UpdateAttributeAsync(ProductAttribute data) => await productDB.UpdateAttributeAsync(data);
         public static async Task<bool> DeleteAttributeAsync(long attributeId) => await productDB.DeleteAttributeAsync(attributeId);
-
-        public static dynamic ListOfProvinces()
-        {
-            throw new NotImplementedException();
-        }
         #endregion
+
+        // ĐÃ SỬA: Hàm lấy danh sách Tỉnh/Thành chuẩn 
+        public static List<Province> ListOfProvinces()
+        {
+            return provinceDB.List().ToList();
+        }
     }
 }

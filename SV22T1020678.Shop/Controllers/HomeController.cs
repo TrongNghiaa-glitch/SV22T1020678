@@ -7,17 +7,17 @@ namespace SV22T1020678.Shop.Controllers
 {
     public class HomeController : Controller
     {
-        public async Task<IActionResult> Index(int categoryId = 0, int supplierId = 0, decimal minPrice = 0, decimal maxPrice = 0, string searchValue = "", int page = 1)
+        public async Task<IActionResult> Index(int categoryId = 0, decimal minPrice = 0, decimal maxPrice = 0, string searchValue = "", int page = 1, string sortOrder = "NameASC") 
         {
             var input = new SV22T1020678.Models.Catalog.ProductSearchInput()
             {
                 Page = page,
-                PageSize = 12,
+                PageSize = 20,
                 SearchValue = searchValue ?? "",
                 CategoryID = categoryId,
-                SupplierID = supplierId,
                 MinPrice = minPrice,
-                MaxPrice = maxPrice
+                MaxPrice = maxPrice,
+                SortOrder = sortOrder
             };
 
             var data = await CatalogDataService.ListProductsAsync(input);

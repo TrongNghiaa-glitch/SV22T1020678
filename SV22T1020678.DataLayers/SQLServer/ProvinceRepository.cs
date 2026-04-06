@@ -35,5 +35,14 @@ namespace SV22T1020678.DataLayers.SQLServer
             var data = await connection.QueryAsync<Province>(sql);
             return data.ToList();
         }
+        /// <summary>
+        /// Lấy danh sách tất cả các tỉnh/thành (Hàm đồng bộ)
+        /// </summary>
+        public List<Province> List()
+        {
+            using var connection = new SqlConnection(_connectionString);
+            string sql = "SELECT ProvinceName FROM Provinces ORDER BY ProvinceName";
+            return connection.Query<Province>(sql).ToList();
+        }
     }
 }
