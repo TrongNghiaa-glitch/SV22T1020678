@@ -1,197 +1,385 @@
 ﻿@model SV22T1020678.Models.Common.PagedResult<SV22T1020678.Models.Catalog.Product>
 @{
-    ViewData["Title"] = "Trang chủ";
+    ViewData["Title"] = "Cửa hàng - Electro Shop";
     var searchInput = ViewBag.SearchInput as SV22T1020678.Models.Catalog.ProductSearchInput;
 }
 
-<div class="card shadow-sm border-0 mb-4 p-3 rounded-4 bg-light">
-    <form action="~/" method="get">
-        <div class="row g-2 align-items-center">
-            <div class="col-md-2">
-                <select class="form-select rounded-pill" name="categoryId">
-                    <option value="0">-- Tất cả loại hàng --</option>
+<style>
+    :root {
+        --electro-orange: #ffb524;
+        --text-gray: #777;
+    }
+
+    /* 1. Reset khoảng cách để hai cột bằng nhau */
+    .shop-container {
+        padding-top: 20px !important;
+    }
+
+    .sidebar-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        margin-bottom: 20px;
+        color: #333;
+        border-bottom: 2px solid #f8f9fa;
+        padding-bottom: 15px; /* Tăng padding để cân với ô search */
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-top: 0;
+    }
+
+    .cat-item {
+        display: block;
+        padding: 10px 0;
+        color: var(--text-gray);
+        text-decoration: none;
+        transition: 0.3s;
+        font-size: 0.95rem;
+        border-left: 3px solid transparent;
+        padding-left: 5px;
+    }
+
+        /* Làm nổi bật danh mục đang chọn */
+        .cat-item.active-cat {
+            color: var(--electro-orange) !important;
+            font-weight: 700;
+            border-left: 3px solid var(--electro-orange);
+            padding-left: 10px;
+        }
+
+        .cat-item:hover {
+            color: var(--electro-orange);
+            padding-left: 10px;
+        }
+
+    /* Thanh công cụ tìm kiếm & sắp xếp */
+    .shop-toolbar {
+        background: #fff;
+        padding: 12px 15px;
+        border-radius: 10px;
+        margin-bottom: 30px;
+        border: 1px solid #f1f1f1;
+    }
+
+    .search-box-custom {
+        border-radius: 5px 0 0 5px !important;
+        border: 1px solid #eee;
+        background: #f9f9f9;
+    }
+
+    .btn-search-custom {
+        background: #f9f9f9;
+        border: 1px solid #eee;
+        color: #666;
+        border-radius: 0 5px 5px 0 !important;
+        border-left: none;
+    }
+
+    /* Card sản phẩm */
+    .product-card-custom {
+        border: 1px solid #f1f1f1;
+        border-radius: 10px;
+        transition: 0.3s;
+        background: #fff;
+    }
+
+        .product-card-custom:hover {
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+            transform: translateY(-3px);
+        }
+
+    .pagination-circular .page-link {
+        border-radius: 50% !important;
+        margin: 0 5px;
+        width: 35px;
+        height: 35px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid #eee;
+        color: #333;
+        font-size: 0.9rem;
+    }
+
+    .page-item.active .page-link {
+        background: var(--electro-orange) !important;
+        border-color: var(--electro-orange) !important;
+        color: white !important;
+    }
+
+    .custom-pagination {
+        display: flex !important;
+        flex-direction: row !important;
+        justify-content: center;
+        list-style: none;
+        padding: 0;
+        margin-top: 40px;
+        gap: 8px; /* Khoảng cách giữa các con số */
+    }
+
+        .custom-pagination .page-item {
+            display: block !important;
+        }
+
+        .custom-pagination .page-link {
+            width: 40px;
+            height: 40px;
+            display: flex !important;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50% !important; /* Biến thành hình tròn */
+            border: 1px solid #eee;
+            color: #333;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            background-color: #fff;
+        }
+
+        .custom-pagination .page-item.active .page-link {
+            background-color: #ffb524 !important; /* Màu cam Electro */
+            border-color: #ffb524 !important;
+            color: #fff !important;
+            box-shadow: 0 4px 10px rgba(255, 181, 36, 0.3);
+        }
+
+        .custom-pagination .page-link:hover {
+            background-color: #f8f9fa;
+            color: #ffb524;
+        }
+</style>
+
+<div class="container-fluid carousel bg-light px-0">
+    <div class="row g-0 justify-content-end">
+        <div class="col-12 col-lg-7 col-xl-9">
+            <div class="header-carousel owl-carousel bg-light py-5">
+                <div class="row g-0 header-carousel-item align-items-center">
+                    <div class="col-xl-6 carousel-img"><img src="~/img/carousel-1.png" class="img-fluid w-100"></div>
+                    <div class="col-xl-6 carousel-content p-4">
+                        <h4 class="text-uppercase fw-bold mb-4" style="color: #ffb524;">Save Up To A $400</h4>
+                        <h1 class="display-3 text-capitalize mb-4">Laptops & Smartphones</h1>
+                        <a class="btn btn-primary rounded-pill py-3 px-5" href="#product-list-section">Mua ngay</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-lg-5 col-xl-3"><div class="carousel-header-banner h-100"><img src="~/img/header-img.jpg" class="img-fluid w-100 h-100" style="object-fit: cover;"></div></div>
+    </div>
+</div>
+
+<div id="product-list-section" style="padding-top: 30px;"></div>
+
+<div class="container shop-container">
+    <div class="row g-4 align-items-start">
+        <div class="col-lg-3">
+            <div class="sidebar-section mb-5">
+                <h5 class="sidebar-title">Danh mục</h5>
+                <div class="cat-list">
+                    <a href="~/?categoryId=0#product-list-section"
+                       class="cat-item @(searchInput?.CategoryID == 0 ? "active-cat" : "")">Tất cả sản phẩm</a>
                     @if (ViewBag.Categories != null)
                     {
                         foreach (var cat in ViewBag.Categories)
                         {
-                            if (cat.CategoryID == searchInput?.CategoryID)
-                            {
-                                <option value="@cat.CategoryID" selected>@cat.CategoryName</option>
-                            }
-                            else
-                            {
-                                <option value="@cat.CategoryID">@cat.CategoryName</option>
-                            }
+                            <a href="~/?categoryId=@cat.CategoryID#product-list-section"
+                               class="cat-item @(cat.CategoryID == searchInput?.CategoryID ? "active-cat" : "")">
+                                @cat.CategoryName
+                            </a>
                         }
                     }
-                </select>
-            </div>
-            <div class="col-md-2">
-                <input type="text" name="searchValue" value="@searchInput?.SearchValue" class="form-control rounded-pill" placeholder="Tên sản phẩm...">
-            </div>
-            <div class="col-md-2">
-                <input type="number" name="minPrice" value="@(searchInput?.MinPrice == 0 ? "" : searchInput?.MinPrice)" class="form-control rounded-pill" placeholder="Giá từ...">
-            </div>
-            <div class="col-md-2">
-                <input type="number" name="maxPrice" value="@(searchInput?.MaxPrice == 0 ? "" : searchInput?.MaxPrice)" class="form-control rounded-pill" placeholder="Đến giá...">
-            </div>
-
-            <div class="col-md-2">
-                <select class="form-select rounded-pill" name="sortOrder" onchange="this.form.submit()">
-                    @if (string.IsNullOrEmpty(searchInput?.SortOrder) || searchInput?.SortOrder == "NameASC")
-                    {
-                        <option value="NameASC" selected>Tên A-Z</option>
-                    }
-                    else
-                    {
-                        <option value="NameASC">Tên A-Z</option>
-                    }
-
-                    @if (searchInput?.SortOrder == "NameDESC")
-                    {
-                        <option value="NameDESC" selected>Tên Z-A</option>
-                    }
-                    else
-                    {
-                        <option value="NameDESC">Tên Z-A</option>
-                    }
-
-                    @if (searchInput?.SortOrder == "PriceASC")
-                    {
-                        <option value="PriceASC" selected>Giá tăng dần</option>
-                    }
-                    else
-                    {
-                        <option value="PriceASC">Giá tăng dần</option>
-                    }
-
-                    @if (searchInput?.SortOrder == "PriceDESC")
-                    {
-                        <option value="PriceDESC" selected>Giá giảm dần</option>
-                    }
-                    else
-                    {
-                        <option value="PriceDESC">Giá giảm dần</option>
-                    }
-                </select>
-            </div>
-
-            <div class="col-md-2">
-                <button type="submit" class="btn btn-primary rounded-pill w-100 fw-bold"><i class="bi bi-search"></i> Tìm kiếm</button>
-            </div>
-        </div>
-    </form>
-</div>
-
-<div class="row row-cols-1 row-cols-md-3 row-cols-lg-4 g-4">
-    @foreach (var item in Model.DataItems)
-    {
-        <div class="col">
-            <div class="card h-100 shadow-sm border-0 product-card rounded-4 overflow-hidden">
-                <a href="~/Home/Details/@item.ProductID">
-                    <img src="http://localhost:5258/images/products/@(string.IsNullOrEmpty(item.Photo) ? "nophoto.png" : item.Photo)" class="card-img-top" alt="@item.ProductName" style="height: 200px; object-fit: cover;">
-                </a>
-                <div class="card-body d-flex flex-column">
-                    <h6 class="card-title fw-bold">
-                        <a href="~/Home/Details/@item.ProductID" class="text-dark text-decoration-none">@item.ProductName</a>
-                    </h6>
-                    <p class="text-danger fw-bold fs-5 mb-3 mt-auto">@item.Price.ToString("N0") đ</p>
-
-                    <form action="~/Cart/Add" method="post" class="mt-auto">
-                        <input type="hidden" name="productId" value="@item.ProductID" />
-                        <input type="hidden" name="productName" value="@item.ProductName" />
-                        <input type="hidden" name="salePrice" value="@item.Price" />
-                        <button type="submit" class="btn btn-outline-primary w-100 rounded-pill"><i class="bi bi-cart-plus"></i> Chọn mua</button>
-                    </form>
                 </div>
             </div>
+
+            <div class="sidebar-section mb-5">
+                <h5 class="sidebar-title">Khoảng giá</h5>
+                <form action="~/" method="get">
+                    <input type="hidden" name="categoryId" value="@searchInput?.CategoryID" />
+                    <input type="hidden" name="sortOrder" value="@searchInput?.SortOrder" />
+                    <div class="d-flex align-items-center gap-2 mb-3">
+                        <input type="number" name="minPrice" class="form-control form-control-sm" placeholder="Từ" value="@(searchInput?.MinPrice == 0 ? "" : searchInput?.MinPrice)">
+                        <span class="text-muted">-</span>
+                        <input type="number" name="maxPrice" class="form-control form-control-sm" placeholder="Đến" value="@(searchInput?.MaxPrice == 0 ? "" : searchInput?.MaxPrice)">
+                    </div>
+                    <button type="submit" class="btn btn-sm btn-warning w-100 text-white fw-bold">Lọc ngay</button>
+                </form>
+            </div>
         </div>
-    }
-</div>
 
-@if (Model.PageCount > 1)
-{
-    <style>
-        .pagination-circular .page-item {
-            margin: 0 4px;
-        }
+        <div class="col-lg-9">
+            <form action="~/" method="get" id="frmSearch">
+                <input type="hidden" name="categoryId" value="@searchInput?.CategoryID" />
+                <div class="shop-toolbar shadow-sm d-flex flex-wrap align-items-center justify-content-between gap-3">
+                    <div class="input-group" style="max-width: 450px;">
+                        <input type="text" name="searchValue" value="@searchInput?.SearchValue" class="form-control search-box-custom" placeholder="Tìm kiếm sản phẩm...">
+                        <button class="btn btn-search-custom px-3" type="submit"><i class="fa fa-search"></i></button>
+                    </div>
 
-        .pagination-circular .page-link {
-            border-radius: 50% !important; /* Bo tròn tuyệt đối */
-            width: 45px;
-            height: 45px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 500;
-            color: #495057;
-            border: 1px solid #dee2e6;
-            transition: all 0.2s;
-        }
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="small text-muted">Sắp xếp:</span>
+                        <select name="sortOrder" class="form-select form-select-sm border-0 bg-light" onchange="this.form.submit()" style="width: 170px; cursor: pointer;">
+                            <option value="NameASC" selected="@(searchInput?.SortOrder == "NameASC")">Mặc định (A-Z)</option>
+                            <option value="PriceASC" selected="@(searchInput?.SortOrder == "PriceASC")">Giá: Thấp đến Cao</option>
+                            <option value="PriceDESC" selected="@(searchInput?.SortOrder == "PriceDESC")">Giá: Cao đến Thấp</option>
+                        </select>
+                    </div>
+                </div>
+            </form>
 
-        .pagination-circular .page-item.active .page-link {
-            background-color: #0d6efd;
-            border-color: #0d6efd;
-            color: #fff;
-            box-shadow: 0 3px 6px rgba(13,110,253,0.3);
-        }
+            <div class="row g-4 product">
+                @foreach (var item in Model.DataItems)
+                {
+                    <div class="col-md-4">
+                        <div class="product-card-custom h-100 d-flex flex-column p-3">
+                            <div class="text-center mb-3 mt-2">
+                                <a href="~/Home/Details/@item.ProductID">
+                                    <img src="/images/products/@(string.IsNullOrEmpty(item.Photo) ? "nophoto.png" : item.Photo)"
+                                         class="img-fluid" style="height: 180px; object-fit: contain;">
+                                </a>
+                            </div>
+                            <div class="card-body p-0 text-center flex-grow-1 d-flex flex-column">
+                                <a href="~/Home/Details/@item.ProductID" class="h6 text-dark text-decoration-none d-block mb-2" style="font-size: 0.95rem;">@item.ProductName</a>
+                                <div class="mt-auto">
+                                    <p class="mb-3 text-warning fw-bold fs-5">@item.Price.ToString("N0") đ</p>
+                                    <form action="/Cart/Add" method="post">
+                                        <input type="hidden" name="productId" value="@item.ProductID" />
+                                        <input type="hidden" name="productName" value="@item.ProductName" />
+                                        <input type="hidden" name="salePrice" value="@item.Price" />
+                                        <input type="hidden" name="quantity" value="1" />
+                                        <button type="button" class="btn btn-outline-warning rounded-pill w-100 btn-add-to-cart btn-sm fw-bold">
+                                            Thêm vào giỏ
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
 
-        .pagination-circular .page-link:hover:not(.active) {
-            background-color: #e9ecef;
-        }
-
-        .pagination-circular .page-item.disabled .page-link {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-    </style>
-
-    int currentPage = Model.Page;
-    int totalPages = Model.PageCount;
-    int maxPagesToShow = 5;
-
-    int startPage = Math.Max(1, currentPage - maxPagesToShow / 2);
-    int endPage = Math.Min(totalPages, currentPage + maxPagesToShow / 2);
-
-    if (startPage == 1) { endPage = Math.Min(totalPages, maxPagesToShow); }
-    if (endPage == totalPages) { startPage = Math.Max(1, totalPages - maxPagesToShow + 1); }
-
-    <div class="d-flex justify-content-center mt-5 mb-5">
-        <ul class="pagination pagination-circular shadow-sm">
-
-            <li class="page-item @(currentPage == 1 ? "disabled" : "")">
-                <a class="page-link" href="~/?categoryId=@searchInput?.CategoryID&supplierId=@searchInput?.SupplierID&minPrice=@(searchInput?.MinPrice == 0 ? "" : searchInput?.MinPrice)&maxPrice=@(searchInput?.MaxPrice == 0 ? "" : searchInput?.MaxPrice)&searchValue=@searchInput?.SearchValue&sortOrder=@searchInput?.SortOrder&page=1" title="Trang đầu">
-                    &lt;&lt;
-                </a>
-            </li>
-
-            <li class="page-item @(currentPage == 1 ? "disabled" : "")">
-                <a class="page-link" href="~/?categoryId=@searchInput?.CategoryID&supplierId=@searchInput?.SupplierID&minPrice=@(searchInput?.MinPrice == 0 ? "" : searchInput?.MinPrice)&maxPrice=@(searchInput?.MaxPrice == 0 ? "" : searchInput?.MaxPrice)&searchValue=@searchInput?.SearchValue&sortOrder=@searchInput?.SortOrder&page=@(currentPage - 1)" title="Trang trước">
-                    &lt;
-                </a>
-            </li>
-
-            @for (int i = startPage; i <= endPage; i++)
+            @if (Model.PageCount > 1)
             {
-                <li class="page-item @(i == currentPage ? "active" : "")">
-                    <a class="page-link" href="~/?categoryId=@searchInput?.CategoryID&supplierId=@searchInput?.SupplierID&minPrice=@(searchInput?.MinPrice == 0 ? "" : searchInput?.MinPrice)&maxPrice=@(searchInput?.MaxPrice == 0 ? "" : searchInput?.MaxPrice)&searchValue=@searchInput?.SearchValue&sortOrder=@searchInput?.SortOrder&page=@i">
-                        @i
-                    </a>
-                </li>
+                <div class="col-12 mt-5">
+                    <ul class="custom-pagination">
+                        @* --- NÚT VỀ TRANG ĐẦU TIÊN --- *@
+                        @if (Model.Page > 1)
+                        {
+                            <li class="page-item">
+                                <a class="page-link border-0" title="Trang đầu"
+                                   href="~/?page=1&categoryId=@searchInput?.CategoryID&searchValue=@searchInput?.SearchValue&sortOrder=@searchInput?.SortOrder#product-list-section">
+                                    <i class="fas fa-angle-double-left"></i>
+                                </a>
+                            </li>
+                        }
+                        @* Nút TRƯỚC *@
+                        @if (Model.Page > 1)
+                        {
+                            <li class="page-item">
+                                <a class="page-link" href="~/?page=@(Model.Page - 1)&categoryId=@searchInput?.CategoryID&searchValue=@searchInput?.SearchValue&sortOrder=@searchInput?.SortOrder#product-list-section">
+                                    <i class="fa fa-chevron-left small"></i>
+                                </a>
+                            </li>
+                        }
+
+                        @* Danh sách các con số *@
+                        @{
+                            int maxPages = 5;
+                            int startPage = Math.Max(1, Model.Page - maxPages / 2);
+                            int endPage = Math.Min(Model.PageCount, startPage + maxPages - 1);
+                            if (endPage - startPage + 1 < maxPages) { startPage = Math.Max(1, endPage - maxPages + 1); }
+                        }
+
+                        @for (int i = startPage; i <= endPage; i++)
+                        {
+                            <li class="page-item @(i == Model.Page ? "active" : "")">
+                                <a class="page-link" href="~/?page=@i&categoryId=@searchInput?.CategoryID&searchValue=@searchInput?.SearchValue&sortOrder=@searchInput?.SortOrder#product-list-section">@i</a>
+                            </li>
+                        }
+
+                        @* Nút SAU *@
+                        @if (Model.Page < Model.PageCount)
+                        {
+                            <li class="page-item">
+                                <a class="page-link" href="~/?page=@(Model.Page + 1)&categoryId=@searchInput?.CategoryID&searchValue=@searchInput?.SearchValue&sortOrder=@searchInput?.SortOrder#product-list-section">
+                                    <i class="fa fa-chevron-right small"></i>
+                                </a>
+                            </li>
+                        }
+
+                        @* --- NÚT ĐẾN TRANG CUỐI CÙNG --- *@
+                        @if (Model.Page < Model.PageCount)
+                        {
+                        <li class="page-item">
+                            <a class="page-link border-0" title="Trang cuối"
+                               href="~/?page=@Model.PageCount&categoryId=@searchInput?.CategoryID&searchValue=@searchInput?.SearchValue&sortOrder=@searchInput?.SortOrder#product-list-section">
+                                <i class="fas fa-angle-double-right"></i>
+                            </a>
+                        </li>
+                        }
+                    </ul>
+                </div>
             }
-
-            <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
-                <a class="page-link" href="~/?categoryId=@searchInput?.CategoryID&supplierId=@searchInput?.SupplierID&minPrice=@(searchInput?.MinPrice == 0 ? "" : searchInput?.MinPrice)&maxPrice=@(searchInput?.MaxPrice == 0 ? "" : searchInput?.MaxPrice)&searchValue=@searchInput?.SearchValue&sortOrder=@searchInput?.SortOrder&page=@(currentPage + 1)" title="Trang sau">
-                    &gt;
-                </a>
-            </li>
-
-            <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
-                <a class="page-link" href="~/?categoryId=@searchInput?.CategoryID&supplierId=@searchInput?.SupplierID&minPrice=@(searchInput?.MinPrice == 0 ? "" : searchInput?.MinPrice)&maxPrice=@(searchInput?.MaxPrice == 0 ? "" : searchInput?.MaxPrice)&searchValue=@searchInput?.SearchValue&sortOrder=@searchInput?.SortOrder&page=@totalPages" title="Trang cuối">
-                    &gt;&gt;
-                </a>
-            </li>
-
-        </ul>
+        </div>
     </div>
+</div>
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // 1. Giữ màn hình ở danh sách sản phẩm khi tìm kiếm hoặc chuyển trang
+            $("#frmSearch").submit(function() {
+                this.action = this.action.split('#')[0] + "#product-list-section";
+            });
+
+            // 2. 🚀 HIỆU ỨNG BAY & THÊM VÀO GIỎ HÀNG
+            $(document).on("click", ".btn-add-to-cart", function () {
+                var btn = $(this);
+                var form = btn.closest('form');
+                var url = form.attr('action');
+
+                // Tìm ảnh sản phẩm trong card mới
+                var productCard = btn.closest('.product-card-custom');
+                var productImg = productCard.find('img').first();
+                var cartBtn = $('#main-cart-icon');
+
+                if (productImg.length > 0 && cartBtn.length > 0) {
+                    // Tạo bản sao ảnh để bay
+                    var flyingImg = productImg.clone().offset({
+                        top: productImg.offset().top,
+                        left: productImg.offset().left
+                    }).css({
+                        'opacity': '0.8',
+                        'position': 'absolute',
+                        'height': '150px',
+                        'width': '150px',
+                        'z-index': '1000000',
+                        'border-radius': '50%',
+                        'object-fit': 'cover'
+                    }).appendTo($('body'));
+
+                    // Di chuyển vèo tới giỏ hàng
+                    flyingImg.animate({
+                        'top': cartBtn.offset().top + 10,
+                        'left': cartBtn.offset().left + 10,
+                        'width': 30,
+                        'height': 30
+                    }, 800, function () {
+                        $(this).remove(); // Bay tới nơi thì biến mất
+
+                        // Gửi dữ liệu ngầm xuống Server (AJAX)
+                        $.post(url, form.serialize(), function () {
+                            // Tăng số lượng trên chấm đỏ
+                            var badge = $("#cart-count-badge");
+                            var currentCount = parseInt(badge.text()) || 0;
+                            badge.text(currentCount + 1);
+
+                            // Giỏ hàng rung rinh báo hiệu đã nhận hàng
+                            cartBtn.addClass("animate__animated animate__tada");
+                            setTimeout(function(){
+                                cartBtn.removeClass("animate__animated animate__tada");
+                            }, 1000);
+                        }).fail(function() {
+                            alert("Hệ thống bận, Nghĩa thử lại sau nhé!");
+                        });
+                    });
+                }
+            });
+        });
+    </script>
 }

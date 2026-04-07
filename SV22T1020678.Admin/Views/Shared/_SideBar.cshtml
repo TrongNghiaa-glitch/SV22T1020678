@@ -2,7 +2,7 @@
     <div class="sidebar-brand">
         <a href="#" class="brand-link">
             <img src="~/lib/adminlte/assets/img/AdminLTELogo.png" alt="Logo" class="brand-image opacity-75 shadow" />
-            <span class="brand-text fw-light">TNP Shop</span>
+            <span class="brand-text fw-light">Electro</span>
         </a>
     </div>    
     <div class="sidebar-wrapper">
@@ -96,6 +96,25 @@
                             <a href="~/Order" class="nav-link">
                                 <i class="nav-icon bi bi-receipt"></i>
                                 <p>Quản lý đơn hàng</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <div class="nav-link disabled text-uppercase small fw-bold opacity-50">
+                                <p>Tài khoản</p>
+                            </div>
+                        </li>
+
+                        <li class="nav-item">
+                            <a href="~/Account/ChangePassword" class="nav-link @(ViewContext.RouteData.Values["Action"]?.ToString() == "ChangePassword" ? "active" : "")">
+                                <i class="nav-icon bi bi-shield-lock-fill"></i>
+                                <p>Đổi mật khẩu</p>
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a href="~/Account/Logout" class="nav-link text-danger">
+                                <i class="nav-icon bi bi-box-arrow-right"></i>
+                                <p>Đăng xuất</p>
                             </a>
                         </li>
                     </ul>

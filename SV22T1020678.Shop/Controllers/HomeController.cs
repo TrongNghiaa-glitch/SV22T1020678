@@ -12,7 +12,7 @@ namespace SV22T1020678.Shop.Controllers
             var input = new SV22T1020678.Models.Catalog.ProductSearchInput()
             {
                 Page = page,
-                PageSize = 20,
+                PageSize = 21,
                 SearchValue = searchValue ?? "",
                 CategoryID = categoryId,
                 MinPrice = minPrice,

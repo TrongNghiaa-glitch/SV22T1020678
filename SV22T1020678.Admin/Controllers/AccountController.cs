@@ -1,92 +1,116 @@
 ﻿using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using SV22T1020678.BusinessLayers;
 using System.Security.Claims;
 
 namespace SV22T1020678.Admin.Controllers
 {
-
+    // BẮT BUỘC phải có chữ AuthenticationSchemes mới hết bị đá ra Login
+    [Authorize(AuthenticationSchemes = "AdminWebAuth")]
     public class AccountController : Controller
     {
+        private const string AUTH_SCHEME = "AdminWebAuth";
+
         [HttpGet]
-        [AllowAnonymous] // Cho phép ai cũng vào được trang đăng nhập
+        [AllowAnonymous]
         public IActionResult Login()
         {
+            if (User.Identity?.IsAuthenticated == true) return RedirectToAction("Index", "Home");
             return View();
         }
 
         [HttpPost]
         [AllowAnonymous]
-        public async Task<IActionResult> Login(string email, string password)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Login(string username, string password)
         {
-            // Kiểm tra tính hợp lệ của dữ liệu đầu vào
-            if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
+            if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
             {
-                ModelState.AddModelError("Error", "Vui lòng nhập đầy đủ Email và Mật khẩu!");
+                ModelState.AddModelError("Error", "Nhập đủ tài khoản và mật khẩu nhé Nghĩa!");
                 return View();
             }
 
-            // TODO: Chỗ này sau này bạn thay bằng hàm check Database
-            if (email == "nghia@gmail.com" && password == "123")
+            var userAccount = await SecurityDataService.AuthorizeEmployeeAsync(username, password);
+            if (userAccount == null)
             {
-                // 1. Khởi tạo danh sách các thông tin (Claims) của người dùng
-                var claims = new List<Claim>()
-                {
-                    new Claim(ClaimTypes.Name, "Nghia"), // Tên hiển thị
-                    new Claim(ClaimTypes.Email, email),
-                    new Claim(ClaimTypes.Role, "Admin") // Cấp quyền Admin
-                };
-
-                // 2. Tạo Identity và Principal
-                var identity = new ClaimsIdentity(claims, "AdminWebAuth");
-                var principal = new ClaimsPrincipal(identity);
-
-                // 3. Ghi nhận đăng nhập bằng Cookie
-                await HttpContext.SignInAsync("AdminWebAuth", principal);
-
-                // Đăng nhập thành công -> Chuyển về Dashboard
-                return RedirectToAction("Index", "Home"); // Sửa lại "Dashboard" thành "Home" nếu project bạn dùng HomeController
+                ModelState.AddModelError("Error", "Sai tài khoản hoặc mật khẩu!");
+                return View();
             }
 
-            // Đăng nhập thất bại
-            ModelState.AddModelError("Error", "Tài khoản hoặc mật khẩu không chính xác!");
-            return View();
+            // KIỂM TRA ROLE: Lưu ý chữ 'admin' phải khớp với DB của cậu
+            string roles = userAccount.RoleNames?.ToLower() ?? "";
+            if (!roles.Contains("admin") && !roles.Contains("employee"))
+            {
+                ModelState.AddModelError("Error", "Bạn không có quyền vào trang Quản trị!");
+                return View();
+            }
+
+            var claims = new List<Claim>()
+            {
+                new Claim(ClaimTypes.Name, userAccount.UserName),
+                new Claim(ClaimTypes.GivenName, userAccount.DisplayName),
+                new Claim(ClaimTypes.Email, userAccount.Email ?? ""),
+                new Claim("Photo", userAccount.Photo ?? "nophoto.png")
+            };
+
+            foreach (var role in userAccount.RoleNames.Split(new[] { ';', ',' }, StringSplitOptions.RemoveEmptyEntries))
+            {
+                claims.Add(new Claim(ClaimTypes.Role, role.Trim()));
+            }
+
+            var identity = new ClaimsIdentity(claims, AUTH_SCHEME);
+            var principal = new ClaimsPrincipal(identity);
+
+            await HttpContext.SignInAsync(AUTH_SCHEME, principal);
+
+            return RedirectToAction("Index", "Home");
         }
 
         public async Task<IActionResult> Logout()
         {
-            // Xóa Cookie đăng xuất
-            await HttpContext.SignOutAsync("AdminWebAuth");
+            await HttpContext.SignOutAsync(AUTH_SCHEME);
             return RedirectToAction("Login");
         }
 
         [HttpGet]
-        [Authorize] // Bắt buộc phải đăng nhập mới được vào trang đổi mật khẩu
-        public IActionResult ChangePassword()
-        {
-            return View();
-        }
+        public IActionResult ChangePassword() => View();
 
         [HttpPost]
-        [Authorize]
-        public IActionResult ChangePassword(string oldPassword, string newPassword, string confirmPassword)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ChangePassword(string oldPassword, string newPassword, string confirmPassword)
         {
-            if (string.IsNullOrWhiteSpace(oldPassword) || string.IsNullOrWhiteSpace(newPassword) || string.IsNullOrWhiteSpace(confirmPassword))
+            if (string.IsNullOrWhiteSpace(oldPassword) || string.IsNullOrWhiteSpace(newPassword))
             {
-                ViewBag.Error = "Vui lòng nhập đầy đủ thông tin.";
+                ViewBag.Error = "Nhập đủ các ô mật khẩu sếp ơi!";
                 return View();
             }
 
             if (newPassword != confirmPassword)
             {
-                ViewBag.Error = "Mật khẩu xác nhận không trùng khớp.";
+                ViewBag.Error = "Mật khẩu xác nhận không khớp!";
                 return View();
             }
 
-            // TODO: Thêm logic kiểm tra mật khẩu cũ từ Database tại đây
+            string userName = User.Identity?.Name ?? "";
 
-            ViewBag.Success = "Đổi mật khẩu thành công!";
+            // Check pass cũ
+            var check = await SecurityDataService.AuthorizeEmployeeAsync(userName, oldPassword);
+            if (check == null)
+            {
+                ViewBag.Error = "Mật khẩu cũ không chính xác!";
+                return View();
+            }
+
+            // Đổi pass
+            bool result = await SecurityDataService.ChangeEmployeePasswordAsync(userName, newPassword);
+            if (result)
+            {
+                ViewBag.Success = "Đổi mật khẩu thành công!";
+                return View();
+            }
+
+            ViewBag.Error = "Lỗi hệ thống, thử lại sau nhé.";
             return View();
         }
     }

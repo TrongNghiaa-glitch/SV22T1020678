@@ -1,196 +1,109 @@
 ﻿using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SV22T1020678.BusinessLayers;
-using SV22T1020678.Models.Catalog;
-using SV22T1020678.Models.Common;
-using SV22T1020678.Models.Partner;
 using System.Security.Claims;
 
-namespace SV22T1020678.Shop.Controllers
+namespace SV22T1020678.Admin.Controllers
 {
+    // PHẢI CÓ AuthenticationSchemes mới hết bị đá ra Login nhé Nghĩa
+    [Authorize(AuthenticationSchemes = "AdminWebAuth")]
     public class AccountController : Controller
     {
+        private const string AUTH_SCHEME = "AdminWebAuth";
+
         [HttpGet]
-        public IActionResult Login() => View();
+        [AllowAnonymous] // Phải có cái này để vào được trang Login
+        public IActionResult Login()
+        {
+            if (User.Identity?.IsAuthenticated == true) return RedirectToAction("Index", "Home");
+            return View();
+        }
 
         [HttpPost]
+        [AllowAnonymous]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(string username, string password)
         {
-            var customer = await PartnerDataService.GetCustomerByEmailAsync(username);
-
-            // Kiểm tra thông tin đăng nhập
-            if (customer != null && customer.Email == username && customer.Password == password)
+            var userAccount = await SecurityDataService.AuthorizeEmployeeAsync(username, password);
+            if (userAccount == null)
             {
-                var claims = new List<Claim> {
-                    new Claim(ClaimTypes.Name, customer.CustomerName ?? ""),
-                    new Claim(ClaimTypes.NameIdentifier, customer.CustomerID.ToString()),
-                    new Claim(ClaimTypes.Email, customer.Email ?? "")
-                };
-                var identity = new ClaimsIdentity(claims, "AdminWebAuth");
-                var principal = new ClaimsPrincipal(identity);
-
-                await HttpContext.SignInAsync("AdminWebAuth", principal);
-                return RedirectToAction("Index", "Home");
+                ModelState.AddModelError("Error", "Sai tài khoản hoặc mật khẩu!");
+                return View();
             }
 
-            ViewBag.Error = "Tài khoản hoặc mật khẩu không đúng!";
-            return View();
+            // KIỂM TRA ROLE (Trên Git cậu dùng RoleNames)
+            var claims = new List<Claim>()
+            {
+                new Claim(ClaimTypes.Name, userAccount.UserName),
+                new Claim(ClaimTypes.GivenName, userAccount.DisplayName),
+                new Claim(ClaimTypes.Email, userAccount.Email ?? ""),
+                new Claim("Photo", userAccount.Photo ?? "nophoto.png")
+            };
+
+            // Tách quyền và add vào Claim
+            if (!string.IsNullOrEmpty(userAccount.RoleNames))
+            {
+                foreach (var role in userAccount.RoleNames.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries))
+                {
+                    claims.Add(new Claim(ClaimTypes.Role, role.Trim()));
+                }
+            }
+
+            var identity = new ClaimsIdentity(claims, AUTH_SCHEME);
+            var principal = new ClaimsPrincipal(identity);
+
+            // Đăng nhập đúng Scheme
+            await HttpContext.SignInAsync(AUTH_SCHEME, principal);
+
+            return RedirectToAction("Index", "Home");
         }
 
         public async Task<IActionResult> Logout()
         {
-            await HttpContext.SignOutAsync("AdminWebAuth");
+            await HttpContext.SignOutAsync(AUTH_SCHEME);
             return RedirectToAction("Login");
         }
 
         [HttpGet]
-        public async Task<IActionResult> Register()
-        {
-            // Sử dụng GetProvincesAsync từ PartnerDataService
-            ViewBag.Provinces = CatalogDataService.ListOfProvinces();
-            return View();
-        }
+        public IActionResult ChangePassword() => View();
 
         [HttpPost]
-        public async Task<IActionResult> Register(Customer data)
-        {
-            try
-            {
-                if (string.IsNullOrWhiteSpace(data.CustomerName) || string.IsNullOrWhiteSpace(data.Email))
-                {
-                    ViewBag.Error = "Vui lòng nhập đầy đủ Tên và Email!";
-                    return View(data);
-                }
-
-                bool isEmailValid = await PartnerDataService.IsValidEmailAsync(data.Email, 0);
-                if (!isEmailValid)
-                {
-                    ViewBag.Error = "Email này đã được sử dụng. Vui lòng chọn Email khác!";
-                    return View(data);
-                }
-
-                data.IsLocked = false;
-                int newCustomerId = await PartnerDataService.AddCustomerAsync(data);
-
-                if (newCustomerId > 0)
-                {
-                    return RedirectToAction("Login");
-                }
-
-                ViewBag.Error = "Có lỗi xảy ra khi lưu dữ liệu. Vui lòng thử lại!";
-                return View(data);
-            }
-            catch (Exception ex)
-            {
-                ViewBag.Error = "Lỗi hệ thống: " + ex.Message;
-                return View(data);
-            }
-        }
-
-        [Authorize]
-        public async Task<IActionResult> Profile()
-        {
-            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (int.TryParse(userIdClaim, out int customerId))
-            {
-                var current = await PartnerDataService.GetCustomerAsync(customerId);
-
-                // LẤY DANH SÁCH TỪ REPO (Đảm bảo khớp 100% với khóa ngoại)
-                ViewBag.Provinces = await PartnerDataService.GetProvincesAsync();
-
-                return View(current);
-            }
-            return RedirectToAction("Login");
-        }
-
-        [HttpPost]
-        [Authorize]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ChangePassword(string oldPassword, string newPassword, string confirmPassword)
         {
-            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-            if (int.TryParse(userIdClaim, out int customerId))
+            if (string.IsNullOrWhiteSpace(oldPassword) || string.IsNullOrWhiteSpace(newPassword))
             {
-                var current = await PartnerDataService.GetCustomerAsync(customerId);
-
-                if (current != null)
-                {
-                    string dbPass = (current.Password ?? "").Trim();
-                    string inputOldPass = (oldPassword ?? "").Trim();
-
-                    bool isOldAccount = string.IsNullOrEmpty(dbPass);
-
-                    if (!isOldAccount && dbPass != inputOldPass)
-                    {
-                        TempData["Error"] = "Mật khẩu hiện tại không chính xác!";
-                    }
-                    else if ((newPassword ?? "").Trim() != (confirmPassword ?? "").Trim())
-                    {
-                        TempData["Error"] = "Xác nhận mật khẩu mới không khớp!";
-                    }
-                    else if (string.IsNullOrEmpty((newPassword ?? "").Trim()))
-                    {
-                        TempData["Error"] = "Vui lòng nhập mật khẩu mới!";
-                    }
-                    else
-                    {
-                        current.Password = newPassword.Trim();
-                        await PartnerDataService.UpdateCustomerAsync(current);
-                        TempData["Message"] = "Đổi mật khẩu thành công!";
-                    }
-                }
-            }
-            else
-            {
-                TempData["Error"] = "Lỗi xác thực người dùng. Vui lòng đăng nhập lại!";
+                ViewBag.Error = "Nhập đủ mật khẩu sếp ơi!";
+                return View();
             }
 
-            return RedirectToAction("Profile");
-        }
-
-        [HttpPost]
-        [Authorize]
-        public async Task<IActionResult> UpdateProfile(Customer data)
-        {
-            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-            if (int.TryParse(userIdClaim, out int customerId))
+            if (newPassword != confirmPassword)
             {
-                var current = await PartnerDataService.GetCustomerAsync(customerId);
-
-                if (current != null)
-                {
-                    current.CustomerName = data.CustomerName ?? current.CustomerName;
-                    current.ContactName = data.ContactName ?? current.ContactName;
-                    current.Phone = data.Phone ?? current.Phone;
-                    current.Address = data.Address ?? current.Address;
-
-                    if (!string.IsNullOrEmpty(data.Province))
-                    {
-                        current.Province = data.Province;
-                    }
-
-                    await PartnerDataService.UpdateCustomerAsync(current);
-
-                    var claims = new List<Claim>
-                    {
-                        new Claim(ClaimTypes.Name, current.CustomerName),
-                        new Claim(ClaimTypes.Email, current.Email),
-                        new Claim(ClaimTypes.NameIdentifier, current.CustomerID.ToString())
-                    };
-
-                    var identity = new ClaimsIdentity(claims, "AdminWebAuth");
-                    var principal = new ClaimsPrincipal(identity);
-
-                    await HttpContext.SignInAsync("AdminWebAuth", principal);
-
-                    TempData["Message"] = "Cập nhật thông tin thành công!";
-                }
+                ViewBag.Error = "Mật khẩu xác nhận không khớp!";
+                return View();
             }
 
-            return RedirectToAction("Profile");
+            string userName = User.Identity?.Name ?? "";
+
+            // Check pass cũ
+            var check = await SecurityDataService.AuthorizeEmployeeAsync(userName, oldPassword);
+            if (check == null)
+            {
+                ViewBag.Error = "Mật khẩu cũ không chính xác!";
+                return View();
+            }
+
+            // Đổi pass
+            bool result = await SecurityDataService.ChangeEmployeePasswordAsync(userName, newPassword);
+            if (result)
+            {
+                ViewBag.Success = "Đổi mật khẩu thành công rực rỡ!";
+                return View();
+            }
+
+            ViewBag.Error = "Lỗi hệ thống, thử lại sau.";
+            return View();
         }
     }
 }
