@@ -56,10 +56,10 @@
                                 <td class="py-4">
                                     <p class="mb-0 text-danger fw-bold fs-5">@item.TotalPrice.ToString("N0") đ</p>
                                 </td>
-                                <td class="py-4 text-center pe-4">
-                                    <a href="~/Cart/Remove/@item.ProductID" class="btn btn-md rounded-circle bg-light border border-danger text-danger hover-danger" title="Xóa sản phẩm">
-                                        <i class="fa fa-times"></i>
-                                    </a>
+                                <td class="py-4">
+                                <a href="~/Cart/Remove/@item.ProductID" class="btn btn-outline-danger btn-sm rounded-circle btn-delete-item">
+                                    <i class="bi bi-x"></i>
+                                </a>
                                 </td>
                             </tr>
                         }
@@ -69,13 +69,16 @@
 
             <div class="row mt-5">
                 <div class="col-lg-6 mb-4 mb-lg-0">
-                    <div class="d-flex flex-wrap gap-3">
-                        <a href="~/" class="btn btn-outline-secondary rounded-pill px-4 py-3 fw-bold">
-                            <i class="fa fa-arrow-left me-2"></i> Tiếp tục mua hàng
+                    <div class="d-flex align-items-center justify-content-center gap-3 mt-4 mb-4">
+
+                        <a href="~/Home" class="btn btn-outline-danger rounded-pill px-4 py-3">
+                            <i class="bi bi-arrow-left me-1"></i> Tiếp tục mua hàng
                         </a>
-                        <a href="~/Cart/Clear" class="btn btn-outline-danger rounded-pill px-4 py-3 fw-bold">
-                            <i class="fa fa-trash-alt me-2"></i> Xóa sạch giỏ
+
+                        <a href="~/Cart/Clear" id="btnClearCart" class="btn btn-danger rounded-pill px-4 py-3">
+                            <i class="bi bi-trash me-1"></i> Xóa sạch giỏ
                         </a>
+
                     </div>
 
                     <div class="mt-5 bg-light rounded p-4">
@@ -122,3 +125,61 @@
         }
     </div>
 </div>
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        $(document).ready(function () {
+            // Bắt sự kiện click vào nút Xóa sạch giỏ
+            $("#btnClearCart").click(function (e) {
+                // 1. Phanh gấp! Không cho nó chuyển trang ngay
+                e.preventDefault();
+
+                // 2. Lấy cái đường dẫn xóa giỏ hàng từ thuộc tính href
+                var urlToClear = $(this).attr('href');
+
+                // 3. Hiện Popup hỏi cung
+                Swal.fire({
+                    title: 'Bạn có chắc chắn không?',
+                    text: "Toàn bộ sản phẩm cất công lựa nãy giờ sẽ bay màu đó nha!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#dc3545', // Màu đỏ cho nút xóa
+                    cancelButtonColor: '#6c757d', // Màu xám cho nút hủy
+                    confirmButtonText: '<i class="bi bi-trash"></i> Xóa sạch luôn!',
+                    cancelButtonText: 'Thôi, giữ lại'
+                }).then((result) => {
+                    // 4. Nếu khách bấm nút Đỏ (Xác nhận)
+                    if (result.isConfirmed) {
+                        // Bay thẳng sang trang xóa giỏ hàng
+                        window.location.href = urlToClear;
+                    }
+                });
+            });
+            $(".btn-delete-item").click(function (e) {
+            // 1. Phanh lại, không cho nhảy trang
+                e.preventDefault();
+
+            // 2. Lấy đường dẫn xóa của chính cái món đang bấm
+                var urlToDelete = $(this).attr('href');
+
+            // 3. Hiện Popup nhẹ nhàng hơn cái Xóa toàn bộ
+                Swal.fire({
+                    title: 'Bỏ món này nha?',
+                    text: "Bạn có chắc chắn muốn xóa sản phẩm này khỏi giỏ không?",
+                    icon: 'question', // Dùng icon dấu hỏi cho nó đỡ "nguy hiểm"
+                    showCancelButton: true,
+                    confirmButtonColor: '#dc3545',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Đồng ý xóa',
+                    cancelButtonText: 'Giữ lại'
+                }).then((result) => {
+                // 4. Bấm Đồng ý thì mới cho bay màu
+                    if (result.isConfirmed) {
+                        window.location.href = urlToDelete;
+                }
+            });
+        });
+                });
+    </script>
+}

@@ -7,12 +7,9 @@ using System.Security.Claims;
 
 namespace SV22T1020678.Shop.Controllers
 {
-    [Authorize] // Bắt buộc đăng nhập mới được thanh toán và xem lịch sử
+    [Authorize(AuthenticationSchemes = "CustomerWebAuth")]
     public class OrderController : Controller
     {
-        // ==========================================
-        // 1. CÁC HÀM XỬ LÝ THANH TOÁN (Của bạn)
-        // ==========================================
         private List<CartItem> GetCart()
         {
             var json = HttpContext.Session.GetString("ShopCart");
@@ -30,51 +27,65 @@ namespace SV22T1020678.Shop.Controllers
         [HttpPost]
         public async Task<IActionResult> Init(string deliveryProvince, string deliveryAddress)
         {
+            // 1. Kiểm tra giỏ hàng
             var cart = GetCart();
-            // Lấy ID khách hàng từ tài khoản đang đăng nhập
-            int customerId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            if (cart.Count == 0) return Json(new { success = false, message = "Giỏ hàng của bạn đang trống!" });
 
-            // 1. Tạo đối tượng Order
-            var orderData = new Order
+            // 2. Lấy CustomerID an toàn (Tránh lỗi int.Parse nếu null)
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userIdStr, out int customerId))
+                return Json(new { success = false, message = "Phiên đăng nhập hết hạn, vui lòng đăng nhập lại!" });
+
+            // 3. Kiểm tra dữ liệu đầu vào
+            if (string.IsNullOrEmpty(deliveryProvince) || string.IsNullOrEmpty(deliveryAddress))
+                return Json(new { success = false, message = "Vui lòng nhập đầy đủ địa chỉ giao hàng!" });
+
+            try
             {
-                CustomerID = customerId,
-                OrderTime = DateTime.Now,
-                DeliveryProvince = deliveryProvince,
-                DeliveryAddress = deliveryAddress,
-                Status = (SV22T1020678.Models.Sales.OrderStatusEnum)1
-            };
+                // 4. Tạo đối tượng Order
+                var orderData = new Order
+                {
+                    CustomerID = customerId,
+                    OrderTime = DateTime.Now,
+                    DeliveryProvince = deliveryProvince,
+                    DeliveryAddress = deliveryAddress,
+                    EmployeeID = 1, // Mặc định nhân viên hệ thống
+                    Status = OrderStatusEnum.New
+                };
 
-            // 2. Chuyển đổi giỏ hàng sang danh sách chi tiết đơn hàng
-            var orderDetails = cart.Select(item => new OrderDetail
-            {
-                ProductID = item.ProductID,
-                Quantity = item.Quantity,
-                SalePrice = item.SalePrice
-            });
+                // 5. Chuyển đổi giỏ hàng (QUAN TRỌNG: Phải .ToList() để khớp kiểu dữ liệu)
+                var orderDetails = cart.Select(item => new OrderDetail
+                {
+                    ProductID = item.ProductID,
+                    Quantity = item.Quantity,
+                    SalePrice = item.SalePrice
+                }).ToList();
 
-            // 3. Lưu vào Database
-            int orderId = await SalesDataService.SaveOrderAsync(orderData, orderDetails);
+                // 6. Lưu vào Database
+                int orderId = await SalesDataService.SaveOrderAsync(orderData, orderDetails);
 
-            if (orderId > 0)
-            {
-                HttpContext.Session.Remove("ShopCart"); // Xóa giỏ hàng sau khi đặt xong
-                return Json(new { success = true, orderId = orderId });
+                if (orderId > 0)
+                {
+                    HttpContext.Session.Remove("ShopCart"); // Xóa giỏ hàng
+                    return Json(new { success = true, orderId = orderId });
+                }
+
+                return Json(new { success = false, message = "Hệ thống không thể lưu đơn hàng lúc này." });
             }
-            return Json(new { success = false, message = "Lỗi khi tạo đơn hàng!" });
+            catch (Exception ex)
+            {
+                // Nếu có lỗi code bên trong (ví dụ DB lỗi), nó sẽ báo về đây thay vì đứng im
+                return Json(new { success = false, message = "Lỗi: " + ex.Message });
+            }
         }
 
-        // ==========================================
-        // 2. HÀM XEM LỊCH SỬ MUA HÀNG (Mới bổ sung)
-        // ==========================================
         [HttpGet]
         public async Task<IActionResult> History()
         {
-            // Tận dụng luôn cách lấy CustomerID cực chuẩn của bạn
-            int customerId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userIdStr, out int customerId)) return RedirectToAction("Login", "Account");
 
-            // Gọi hàm từ SalesDataService để lấy danh sách
             var data = await SalesDataService.ListOrdersByCustomerIdAsync(customerId);
-
             return View(data);
         }
     }

@@ -3,107 +3,108 @@
     ViewData["Title"] = "Thanh toán";
 }
 
-<div class="container-fluid page-header py-5">
-    <h1 class="text-center text-white display-6 wow fadeInUp" data-wow-delay="0.1s">Thanh toán</h1>
-    <ol class="breadcrumb justify-content-center mb-0 wow fadeInUp" data-wow-delay="0.3s">
-        <li class="breadcrumb-item"><a href="~/">Trang chủ</a></li>
-        <li class="breadcrumb-item"><a href="~/Cart">Giỏ hàng</a></li>
-        <li class="breadcrumb-item active text-white">Thanh toán</li>
-    </ol>
-</div>
-<div class="container-fluid bg-light overflow-hidden py-5">
-    <div class="container py-5">
-        <h1 class="mb-4 wow fadeInUp" data-wow-delay="0.1s">Thông tin giao hàng</h1>
+<div class="row mt-4">
+    <div class="col-md-7">
+        <div class="card shadow-sm border-0 rounded-3 mb-4">
+            <div class="card-header bg-white fw-bold py-3">
+                <i class="bi bi-geo-alt-fill text-danger me-1"></i> Thông tin giao hàng
+            </div>
+            <div class="card-body">
+                <form id="frmCheckout">
+                    @* 1. THÊM TOKEN BẢO MẬT ĐỂ KHÔNG BỊ LỖI ĐƠ *@
+                    @Html.AntiForgeryToken()
 
-        <form id="frmCheckout">
-            <div class="row g-5">
-
-                <div class="col-md-12 col-lg-5 col-xl-5 wow fadeInUp" data-wow-delay="0.1s">
-                    <div class="card shadow-sm border-0 rounded-4 p-4">
-                        <div class="form-item mb-4">
-                            <label class="form-label my-2 fw-bold text-dark">Tỉnh/Thành phố <sup class="text-danger">*</sup></label>
-                            <input type="text" name="deliveryProvince" class="form-control py-3" placeholder="Nhập Tỉnh/Thành phố..." required>
-                        </div>
-
-                        <div class="form-item mb-4">
-                            <label class="form-label my-2 fw-bold text-dark">Địa chỉ nhận hàng cụ thể <sup class="text-danger">*</sup></label>
-                            <textarea name="deliveryAddress" class="form-control" rows="5" placeholder="Số nhà, Tên đường, Phường/Xã..." required></textarea>
-                        </div>
-
-                        <div class="form-item mb-3">
-                            <label class="form-label my-2 fw-bold text-dark">Ghi chú đơn hàng (Tùy chọn)</label>
-                            <textarea class="form-control" spellcheck="false" rows="4" placeholder="Ví dụ: Giao hàng vào giờ hành chính..."></textarea>
-                        </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Tỉnh/Thành phố <span class="text-danger">*</span></label>
+                        <input type="text" name="deliveryProvince" class="form-control" placeholder="Nhập Tỉnh/Thành phố..." required>
                     </div>
-                </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Địa chỉ nhận hàng cụ thể <span class="text-danger">*</span></label>
+                        <textarea name="deliveryAddress" class="form-control" rows="3" placeholder="Số nhà, Tên đường, Phường/Xã..." required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-danger w-100 py-3 fw-bold rounded-3 shadow-sm">
+                        XÁC NHẬN ĐẶT HÀNG
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
 
-                <div class="col-md-12 col-lg-7 col-xl-7 wow fadeInUp" data-wow-delay="0.3s">
-                    <div class="card shadow-sm border-0 rounded-4 p-4">
-                        <h4 class="mb-4 fw-bold">Tóm tắt đơn hàng</h4>
-                        <div class="table-responsive mb-4">
-                            <table class="table">
-                                <thead>
-                                    <tr class="text-center bg-light">
-                                        <th scope="col" class="text-start py-3">Sản phẩm</th>
-                                        <th scope="col" class="py-3">Đơn giá</th>
-                                        <th scope="col" class="py-3">Số lượng</th>
-                                        <th scope="col" class="py-3">Tổng</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach (var item in Model)
-                                    {
-                                        <tr class="text-center border-bottom">
-                                            <th scope="row" class="text-start py-4 fw-normal">@item.ProductName</th>
-                                            <td class="py-4">@((item.TotalPrice / item.Quantity).ToString("N0")) đ</td>
-                                            <td class="py-4 text-center">@item.Quantity</td>
-                                            <td class="py-4 text-primary fw-bold">@item.TotalPrice.ToString("N0") đ</td>
-                                        </tr>
-                                    }
-
-                                    <tr>
-                                        <th scope="row"></th>
-                                        <td class="py-4"></td>
-                                        <td class="py-4"><p class="mb-0 text-dark py-2 fw-bold fs-5 text-end">TỔNG CỘNG:</p></td>
-                                        <td class="py-4"><div class="py-2 text-center"><p class="mb-0 text-danger fs-4 fw-bold">@Model.Sum(x => x.TotalPrice).ToString("N0") đ</p></div></td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-
-                        <h5 class="fw-bold mb-3">Phương thức thanh toán</h5>
-                        <div class="border rounded-3 p-3 mb-3 bg-light">
-                            <div class="form-check text-start">
-                                <input type="radio" class="form-check-input bg-primary border-0" id="Delivery-1" name="PaymentMethod" value="COD" checked>
-                                <label class="form-check-label fw-bold text-dark ms-2" for="Delivery-1">Thanh toán khi nhận hàng (COD)</label>
+    <div class="col-md-5">
+        <div class="card shadow-sm border-0 rounded-3">
+            <div class="card-header bg-white fw-bold py-3">
+                <i class="bi bi-cart-check-fill text-success me-1"></i> Tóm tắt đơn hàng
+            </div>
+            <div class="card-body">
+                <div class="order-items-scroll" style="max-height: 400px; overflow-y: auto;">
+                    @foreach (var item in Model)
+                    {
+                        <div class="d-flex justify-content-between mb-3 align-items-center">
+                            <div style="flex: 1;">
+                                <div class="fw-bold small text-truncate" style="max-width: 200px;">@item.ProductName</div>
+                                <div class="text-muted small">Số lượng: @item.Quantity</div>
+                            </div>
+                            <div class="text-end fw-semibold">
+                                @item.TotalPrice.ToString("N0") <span class="small">đ</span>
                             </div>
                         </div>
-
-                        <div class="row g-4 text-center align-items-center justify-content-center pt-4">
-                            <button type="submit" class="btn btn-primary border-secondary py-3 px-4 text-uppercase w-100 fw-bold text-white fs-5 shadow">XÁC NHẬN ĐẶT HÀNG</button>
-                        </div>
-                    </div>
+                    }
+                </div>
+                <hr class="my-3">
+                <div class="d-flex justify-content-between align-items-center fw-bold fs-5 text-danger">
+                    <span>TỔNG CỘNG:</span>
+                    <span>@Model.Sum(x => x.TotalPrice).ToString("N0") đ</span>
                 </div>
             </div>
-        </form>
+        </div>
     </div>
 </div>
+
 @section Scripts {
+    @* NHÚNG THƯ VIỆN THÔNG BÁO XỊN *@
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <script>
-        $("#frmCheckout").submit(function(e) {
-            e.preventDefault();
-            $.ajax({
-                url: '/Order/Init',
-                type: 'POST',
-                data: $(this).serialize(),
-                success: function(res) {
-                    if(res.success) {
-                        alert("Đặt hàng thành công!");
-                        window.location.href = "/";
-                    } else {
-                        alert(res.message);
+        $(document).ready(function () {
+            $("#frmCheckout").submit(function (e) {
+                e.preventDefault();
+
+                var form = $(this);
+
+                // HIỆN LOADING KHI ĐANG XỬ LÝ
+                Swal.fire({
+                    title: 'Đang xử lý...',
+                    text: 'Vui lòng chờ trong giây lát',
+                    allowOutsideClick: false,
+                    didOpen: () => { Swal.showLoading(); }
+                });
+
+                $.ajax({
+                    url: '@Url.Action("Init", "Order")', // Tự lấy URL chuẩn
+                    type: 'POST',
+                    data: form.serialize(),
+                    success: function (res) {
+                        if (res.success) {
+                            // 2. CHỐT HÀM NHẢY TRANG KHI THÀNH CÔNG
+                            Swal.fire({
+                                title: 'Đặt hàng thành công!',
+                                text: 'Hệ thống đang chuyển bạn đến lịch sử mua hàng...',
+                                icon: 'success',
+                                timer: 2000,
+                                showConfirmButton: false
+                            }).then(() => {
+                                // BAY THẲNG VỀ TRANG LỊCH SỬ, KHÔNG Ở LẠI ĐỂ ROLL UP
+                                window.location.href = "@Url.Action("History", "Order")";
+                            });
+                        } else {
+                            Swal.fire('Thông báo', res.message, 'warning');
+                        }
+                    },
+                    error: function (xhr) {
+                        console.error(xhr.responseText);
+                        Swal.fire('Lỗi hệ thống', 'Không thể kết nối đến máy chủ (Mã: ' + xhr.status + ')', 'error');
                     }
-                }
+                });
             });
         });
     </script>

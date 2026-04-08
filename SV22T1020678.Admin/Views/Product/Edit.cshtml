@@ -11,6 +11,12 @@
     </a>
 }
 
+<div class="row mb-3">
+    <div class="col-12">
+        <h4 class="fw-bold text-dark">@ViewBag.Title</h4>
+    </div>
+</div>
+
 <div class="row justify-content-center">
     <div class="col-12">
         <div class="card card-primary card-outline">
@@ -126,8 +132,110 @@
     </div>
 </div>
 
+@* Render 2 danh sách Ảnh và Thuộc tính *@
 @if (Model.ProductID > 0)
 {
     await Html.RenderPartialAsync("ListPhotos");
     await Html.RenderPartialAsync("ListAttributes");
+}
+
+@section scripts {
+    @* Thư viện SweetAlert2 *@
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        $(document).ready(function () {
+
+            // ==========================================
+            // PHẦN 1: XỬ LÝ POPUP CHO THƯ VIỆN ẢNH
+            // ==========================================
+
+            // Hiện Modal Thêm/Sửa Ảnh
+            $('.btn-photo-modal').click(function (e) {
+                e.preventDefault();
+                var url = $(this).data('url');
+                $.get(url, function (data) {
+                    $('#photoModalContent').html(data);
+                    $('#photoModal').modal('show');
+                });
+            });
+
+            // Nổ Popup hỏi xác nhận Xóa Ảnh
+            $('.btn-delete-photo').click(function (e) {
+                e.preventDefault();
+                var url = $(this).attr('href');
+                Swal.fire({
+                    title: 'Xóa ảnh này?',
+                    text: "Hành động này không thể hoàn tác!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Đồng ý xóa',
+                    cancelButtonText: 'Hủy'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = url;
+                    }
+                });
+            });
+
+
+            // ==========================================
+            // PHẦN 2: XỬ LÝ POPUP CHO THUỘC TÍNH
+            // ==========================================
+
+            // Hiện Modal Thêm/Sửa Thuộc tính
+            $('.btn-attribute-modal').click(function (e) {
+                e.preventDefault();
+                var url = $(this).data('url');
+                $.get(url, function (data) {
+                    $('#attributeModalContent').html(data);
+                    $('#attributeModal').modal('show');
+                });
+            });
+
+            // Nổ Popup hỏi xác nhận Xóa Thuộc tính
+            $('.btn-delete-attribute').click(function (e) {
+                e.preventDefault();
+                var url = $(this).attr('href');
+                Swal.fire({
+                    title: 'Xóa thuộc tính này?',
+                    text: "Hành động này không thể hoàn tác!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Đồng ý xóa',
+                    cancelButtonText: 'Hủy'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = url;
+                    }
+                });
+            });
+
+
+            // ==========================================
+            // PHẦN 3: NỔ POPUP THÔNG BÁO CHUNG SAU KHI LƯU
+            // ==========================================
+            var msg = '@Html.Raw(TempData["Message"])';
+            if (msg !== '') {
+                Swal.fire({
+                    title: 'Thành công!',
+                    text: msg,
+                    icon: 'success',
+                    confirmButtonColor: '#0d6efd',
+                    timer: 3500,
+                    showClass: {
+                        popup: 'animate__animated animate__fadeInDown'
+                    },
+                    hideClass: {
+                        popup: 'animate__animated animate__fadeOutUp'
+                    }
+                });
+            }
+
+        });
+    </script>
 }

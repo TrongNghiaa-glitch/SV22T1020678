@@ -340,6 +340,19 @@
                     }
                 });
             });
+                    // Bổ sung: Click vào các link có class open-modal thì hiện Popup
+        $(document).on("click", ".open-modal", function (e) {
+            e.preventDefault();
+            var link = $(this).attr("href");
+            $.ajax({
+                url: link,
+                type: "GET",
+                success: function (data) {
+                    $("#dialogModalContent").html(data);
+                    $("#dialogModal").modal("show");
+                }
+            });
+        });
         });
     </script>
 }

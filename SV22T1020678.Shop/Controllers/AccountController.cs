@@ -2,58 +2,83 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SV22T1020678.BusinessLayers;
+using SV22T1020678.Models.Partner;
+using SV22T1020678.Models.Security;
 using System.Security.Claims;
 
-namespace SV22T1020678.Admin.Controllers
+namespace SV22T1020678.Shop.Controllers
 {
-    // PHẢI CÓ AuthenticationSchemes mới hết bị đá ra Login nhé Nghĩa
-    [Authorize(AuthenticationSchemes = "AdminWebAuth")]
+    [Authorize(AuthenticationSchemes = "CustomerWebAuth")]
     public class AccountController : Controller
     {
-        private const string AUTH_SCHEME = "AdminWebAuth";
+        private const string AUTH_SCHEME = "CustomerWebAuth";
 
         [HttpGet]
-        [AllowAnonymous] // Phải có cái này để vào được trang Login
-        public IActionResult Login()
-        {
-            if (User.Identity?.IsAuthenticated == true) return RedirectToAction("Index", "Home");
-            return View();
-        }
+        [AllowAnonymous]
+        public IActionResult Login() => View();
 
         [HttpPost]
         [AllowAnonymous]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Login(string username, string password)
+        public async Task<IActionResult> Login(string email, string password)
         {
-            var userAccount = await SecurityDataService.AuthorizeEmployeeAsync(username, password);
-            if (userAccount == null)
+            if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
             {
-                ModelState.AddModelError("Error", "Sai tài khoản hoặc mật khẩu!");
+                ModelState.AddModelError("", "Vui lòng nhập Email và Mật khẩu");
                 return View();
             }
 
-            // KIỂM TRA ROLE (Trên Git cậu dùng RoleNames)
-            var claims = new List<Claim>()
-            {
-                new Claim(ClaimTypes.Name, userAccount.UserName),
-                new Claim(ClaimTypes.GivenName, userAccount.DisplayName),
-                new Claim(ClaimTypes.Email, userAccount.Email ?? ""),
-                new Claim("Photo", userAccount.Photo ?? "nophoto.png")
-            };
+            // ĐÃ THÊM AWAIT VÀ CHỮ ASYNC Ở ĐUÔI
+            var userData = await SecurityDataService.AuthorizeCustomerAsync(email, password);
 
-            // Tách quyền và add vào Claim
-            if (!string.IsNullOrEmpty(userAccount.RoleNames))
+            if (userData == null)
             {
-                foreach (var role in userAccount.RoleNames.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries))
+                // ĐÃ THÊM AWAIT VÀ CHỮ ASYNC Ở ĐUÔI
+                var empData = await SecurityDataService.AuthorizeEmployeeAsync(email, password);
+
+                if (empData != null)
                 {
-                    claims.Add(new Claim(ClaimTypes.Role, role.Trim()));
+                    var newCustomer = new Customer()
+                    {
+                        CustomerName = empData.DisplayName,
+                        ContactName = empData.DisplayName,
+                        Email = empData.Email,
+                        Phone = "0123456789",
+                        Address = "Nhân viên nội bộ",
+                        Province = "Thừa Thiên Huế",
+                        IsLocked = false
+                    };
+
+                    // ĐÃ THÊM AWAIT VÀ CHỮ ASYNC Ở ĐUÔI
+                    int newCustomerId = await PartnerDataService.AddCustomerAsync(newCustomer);
+
+                    if (newCustomerId > 0)
+                    {
+                        // ĐÃ THÊM AWAIT VÀ CHỮ ASYNC Ở ĐUÔI
+                        await SecurityDataService.ChangeCustomerPasswordAsync(empData.Email, password);
+
+                        // ĐÃ THÊM AWAIT VÀ CHỮ ASYNC Ở ĐUÔI
+                        userData = await SecurityDataService.AuthorizeCustomerAsync(email, password);
+                    }
                 }
             }
+
+            if (userData == null)
+            {
+                ModelState.AddModelError("", "Email hoặc mật khẩu không đúng!");
+                return View();
+            }
+
+            var claims = new List<Claim>()
+            {
+                new Claim(ClaimTypes.Name, userData.DisplayName ?? ""),
+                new Claim(ClaimTypes.Email, userData.Email ?? ""),
+                new Claim(ClaimTypes.NameIdentifier, userData.UserId.ToString())
+            };
 
             var identity = new ClaimsIdentity(claims, AUTH_SCHEME);
             var principal = new ClaimsPrincipal(identity);
 
-            // Đăng nhập đúng Scheme
             await HttpContext.SignInAsync(AUTH_SCHEME, principal);
 
             return RedirectToAction("Index", "Home");
@@ -62,48 +87,116 @@ namespace SV22T1020678.Admin.Controllers
         public async Task<IActionResult> Logout()
         {
             await HttpContext.SignOutAsync(AUTH_SCHEME);
-            return RedirectToAction("Login");
+            return RedirectToAction("Index", "Home");
         }
 
         [HttpGet]
-        public IActionResult ChangePassword() => View();
+        [AllowAnonymous]
+        // SỬA DÒNG NÀY: Đổi từ IActionResult thành async Task<IActionResult>
+        public async Task<IActionResult> Register()
+        {
+            // Chỗ này sếp giữ nguyên (đã có await)
+            ViewBag.Provinces = await DictionaryDataService.ListOfProvinces();
+            return View();
+        }
+
+        [HttpPost]
+        [AllowAnonymous]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Register(Customer data)
+        {
+            if (string.IsNullOrWhiteSpace(data.CustomerName) || string.IsNullOrWhiteSpace(data.Email))
+            {
+                ViewBag.Error = "Vui lòng nhập đầy đủ thông tin!";
+                ViewBag.Provinces = await DictionaryDataService.ListOfProvinces();
+                return View(data);
+            }
+
+            // ĐÃ THÊM AWAIT VÀ CHỮ ASYNC Ở ĐUÔI
+            int id = await PartnerDataService.AddCustomerAsync(data);
+            if (id > 0) return RedirectToAction("Login");
+
+            ViewBag.Error = "Đăng ký thất bại hoặc Email đã tồn tại!";
+            ViewBag.Provinces = DictionaryDataService.ListOfProvinces();
+            return View(data);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Profile()
+        {
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (int.TryParse(userIdClaim, out int customerId))
+            {
+                var current = await PartnerDataService.GetCustomerAsync(customerId);
+                ViewBag.Provinces = await DictionaryDataService.ListOfProvinces();
+                return View(current);
+            }
+            return RedirectToAction("Login");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateProfile(Customer data)
+        {
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (int.TryParse(userIdClaim, out int customerId))
+            {
+                // ĐÃ THÊM AWAIT VÀ CHỮ ASYNC Ở ĐUÔI
+                var current = await PartnerDataService.GetCustomerAsync(customerId);
+                if (current != null)
+                {
+                    current.CustomerName = data.CustomerName;
+                    current.ContactName = data.ContactName;
+                    current.Phone = data.Phone;
+                    current.Address = data.Address;
+                    current.Province = data.Province;
+
+                    // ĐÃ THÊM AWAIT VÀ CHỮ ASYNC Ở ĐUÔI
+                    await PartnerDataService.UpdateCustomerAsync(current);
+
+                    var claims = new List<Claim> {
+                        new Claim(ClaimTypes.Name, current.CustomerName ?? ""),
+                        new Claim(ClaimTypes.NameIdentifier, current.CustomerID.ToString()),
+                        new Claim(ClaimTypes.Email, current.Email ?? ""),
+                        new Claim(ClaimTypes.Role, "customer")
+                    };
+                    var identity = new ClaimsIdentity(claims, AUTH_SCHEME);
+                    await HttpContext.SignInAsync(AUTH_SCHEME, new ClaimsPrincipal(identity));
+
+                    TempData["Message"] = "Cập nhật thông tin thành công!";
+                }
+            }
+            return RedirectToAction("Profile");
+        }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ChangePassword(string oldPassword, string newPassword, string confirmPassword)
         {
-            if (string.IsNullOrWhiteSpace(oldPassword) || string.IsNullOrWhiteSpace(newPassword))
-            {
-                ViewBag.Error = "Nhập đủ mật khẩu sếp ơi!";
-                return View();
-            }
-
             if (newPassword != confirmPassword)
             {
-                ViewBag.Error = "Mật khẩu xác nhận không khớp!";
-                return View();
+                TempData["Error"] = "Xác nhận mật khẩu không khớp!";
+                return RedirectToAction("Profile");
             }
 
-            string userName = User.Identity?.Name ?? "";
+            string email = User.FindFirstValue(ClaimTypes.Email) ?? "";
 
-            // Check pass cũ
-            var check = await SecurityDataService.AuthorizeEmployeeAsync(userName, oldPassword);
+            // ĐÃ THÊM AWAIT VÀ CHỮ ASYNC Ở ĐUÔI
+            var check = await SecurityDataService.AuthorizeCustomerAsync(email, oldPassword);
             if (check == null)
             {
-                ViewBag.Error = "Mật khẩu cũ không chính xác!";
-                return View();
+                TempData["Error"] = "Mật khẩu cũ không đúng!";
+                return RedirectToAction("Profile");
             }
 
-            // Đổi pass
-            bool result = await SecurityDataService.ChangeEmployeePasswordAsync(userName, newPassword);
+            // ĐÃ THÊM AWAIT VÀ CHỮ ASYNC Ở ĐUÔI
+            bool result = await SecurityDataService.ChangeCustomerPasswordAsync(email, newPassword);
             if (result)
-            {
-                ViewBag.Success = "Đổi mật khẩu thành công rực rỡ!";
-                return View();
-            }
+                TempData["Message"] = "Đổi mật khẩu thành công!";
+            else
+                TempData["Error"] = "Lỗi hệ thống!";
 
-            ViewBag.Error = "Lỗi hệ thống, thử lại sau.";
-            return View();
+            return RedirectToAction("Profile");
         }
     }
 }

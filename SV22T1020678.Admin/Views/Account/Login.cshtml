@@ -28,11 +28,16 @@
                 @Html.ValidationMessage("Error", new { @class = "text-danger mb-3 d-block text-center" })
 
                 <form action="~/Account/Login" method="post">
+                    @* 1. PHẢI THÊM DÒNG NÀY ĐỂ BẢO MẬT VÀ KHÔNG BỊ VĂNG *@
+                    @Html.AntiForgeryToken()
                     <div class="input-group mb-3">
-                        <input type="email" name="email" class="form-control" placeholder="Email" autofocus />
+                        @* 2. SỬA name="email" THÀNH name="username" CHO KHỚP CONTROLLER *@
+                        <input type="text" name="username" class="form-control" placeholder="Email" autofocus />
                         <div class="input-group-text"><span class="bi bi-envelope"></span></div>
                     </div>
+
                     <div class="input-group mb-3">
+                        @* Ô này name="password" đã khớp với string password ở Controller rồi nên giữ nguyên *@
                         <input type="password" name="password" class="form-control" placeholder="Password" />
                         <div class="input-group-text"><span class="bi bi-lock-fill"></span></div>
                     </div>

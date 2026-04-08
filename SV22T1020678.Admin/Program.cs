@@ -1,7 +1,9 @@
 ﻿using SV22T1020678.Admin.AppCodes;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using System.Globalization;
-using Microsoft.AspNetCore.Localization; 
+using Microsoft.AspNetCore.Localization;
+using Microsoft.Extensions.FileProviders;
+using System.IO;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -91,3 +93,15 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.Run();
+// ...
+app.UseStaticFiles(); // Cái này giữ nguyên để nó nhận CSS/JS trong wwwroot
+
+// CHÈN ĐOẠN NÀY VÀO ĐỂ DÙNG CHUNG ẢNH TRONG SOLUTION
+app.UseStaticFiles(new StaticFileOptions
+{
+    // Lùi ra 1 cấp (thư mục Solution) rồi đi vào thư mục Uploads
+    FileProvider = new PhysicalFileProvider(
+        Path.Combine(builder.Environment.ContentRootPath, "..", "Uploads")),
+    RequestPath = "/img/products" // URL trên trình duyệt vẫn đẹp như cũ
+});
+// ...

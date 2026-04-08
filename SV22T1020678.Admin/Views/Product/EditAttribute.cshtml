@@ -1,48 +1,40 @@
 ﻿@model SV22T1020678.Models.Catalog.ProductAttribute
 @{
-    ViewBag.Title = Model.AttributeID == 0 ? "Bổ sung thuộc tính" : "Cập nhật thuộc tính";
+    Layout = null; // Tắt layout cha để vừa khít popup
 }
-@section PageToolBar {
-    <button type="submit" form="formEdit" class="btn btn-primary">
-        <i class="bi bi-save"></i> Lưu thuộc tính
-    </button>
-    <a href="~/Product/Edit/@Model.ProductID#attributes" class="btn btn-secondary ms-1">
-        <i class="bi bi-arrow-left"></i> Quay lại
-    </a>
-}
-<div class="row justify-content-center">
-    <div class="col-12">
-        <div class="card card-outline card-success">
-            <div class="card-header">
-                <h5 class="mb-0">Thông tin thuộc tính mặt hàng</h5>
-            </div>
-            <div class="card-body">
-                <form id="formEdit" action="~/Product/SaveAttribute" method="post">
-                    <input type="hidden" name="AttributeID" value="@Model.AttributeID" />
-                    <input type="hidden" name="ProductID" value="@Model.ProductID" />
 
-                    <div class="row mb-3">
-                        <label class="col-sm-3 fw-semibold">Tên thuộc tính</label>
-                        <div class="col-sm-9">
-                            <input type="text" name="AttributeName" class="form-control" value="@Model.AttributeName" placeholder="Ví dụ: Màu sắc, Kích thước" required autofocus />
-                        </div>
-                    </div>
+<form action="~/Product/SaveAttribute" method="post">
+    <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title">
+            @(Model.AttributeID == 0 ? "Bổ sung thuộc tính" : "Cập nhật thuộc tính")
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Đóng"></button>
+    </div>
 
-                    <div class="row mb-3">
-                        <label class="col-sm-3 fw-semibold">Giá trị thuộc tính</label>
-                        <div class="col-sm-9">
-                            <input type="text" name="AttributeValue" class="form-control" value="@Model.AttributeValue" placeholder="Ví dụ: Đỏ, XL, 500g" required />
-                        </div>
-                    </div>
+    <div class="modal-body">
+        <input type="hidden" name="AttributeID" value="@Model.AttributeID" />
+        <input type="hidden" name="ProductID" value="@Model.ProductID" />
 
-                    <div class="row mb-4">
-                        <label class="col-sm-3 fw-semibold">Thứ tự hiển thị</label>
-                        <div class="col-sm-3">
-                            <input type="number" name="DisplayOrder" class="form-control" value="@Model.DisplayOrder" min="1" />
-                        </div>
-                    </div>
-                </form>
-            </div>
+        <div class="mb-3">
+            <label class="form-label fw-bold">Tên thuộc tính</label>
+            <input type="text" class="form-control" name="AttributeName" value="@Model.AttributeName" placeholder="VD: Màu sắc, Dung lượng, RAM..." required />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label fw-bold">Giá trị</label>
+            <input type="text" class="form-control" name="AttributeValue" value="@Model.AttributeValue" placeholder="VD: Đỏ, 256GB, 8GB..." required />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label fw-bold">Thứ tự hiển thị</label>
+            <input type="number" class="form-control" name="DisplayOrder" value="@Model.DisplayOrder" min="1" required />
         </div>
     </div>
-</div>
+
+    <div class="modal-footer bg-light">
+        <button type="submit" class="btn btn-primary fw-bold">
+            <i class="bi bi-save"></i> Lưu dữ liệu
+        </button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy bỏ</button>
+    </div>
+</form>

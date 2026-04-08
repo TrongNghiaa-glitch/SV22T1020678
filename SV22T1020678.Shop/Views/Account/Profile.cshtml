@@ -16,6 +16,8 @@
                         <div class="alert alert-success">@TempData["Message"]</div>
                     }
                     <form action="~/Account/UpdateProfile" method="post">
+                        @Html.AntiForgeryToken() @* Thêm cái này để không bị văng lỗi bảo mật *@
+
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label fw-bold">Họ và tên</label>
@@ -47,14 +49,14 @@
                                     {
                                         foreach (var p in ViewBag.Provinces)
                                         {
-                                            // p ở đây là chuỗi tên tỉnh lấy từ GetProvincesAsync
-                                            if (p == Model.Province)
+                                            @* SỬA LỖI Ở ĐÂY: So sánh p.ProvinceName thay vì so sánh cả object p *@
+                                            if (p.ProvinceName == Model.Province)
                                             {
-                                                <option value="@p" selected>@p</option>
+                                                <option value="@p.ProvinceName" selected>@p.ProvinceName</option>
                                             }
                                             else
                                             {
-                                                <option value="@p">@p</option>
+                                                <option value="@p.ProvinceName">@p.ProvinceName</option>
                                             }
                                         }
                                     }
@@ -79,9 +81,11 @@
                         <div class="alert alert-danger">@TempData["Error"]</div>
                     }
                     <form action="~/Account/ChangePassword" method="post">
+                        @Html.AntiForgeryToken()
+
                         <div class="mb-3">
                             <label class="form-label">Mật khẩu hiện tại</label>
-                            <input type="password" name="oldPassword" class="form-control">
+                            <input type="password" name="oldPassword" class="form-control" required>
                         </div>
                         <hr />
                         <div class="mb-3">

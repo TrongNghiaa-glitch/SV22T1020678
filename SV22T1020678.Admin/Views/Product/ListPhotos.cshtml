@@ -5,18 +5,19 @@
 }
 <div class="row justify-content-center">
     <div class="col-12">
-        <div class="card card-info card-outline mt-4">
+        <div class="card card-info card-outline mt-4 shadow-sm">
             <div class="card-header">
                 <div class="row align-items-center">
                     <div class="col">
-                        <h6 id="photos" class="mb-0">
+                        <h6 id="photos" class="mb-0 fw-bold">
                             <i class="bi bi-images me-2"></i> Thư viện ảnh
                         </h6>
                     </div>
                     <div class="col text-end">
-                        <a class="btn btn-sm btn-primary" href="~/Product/Photo/@Model.ProductID?method=add">
-                            <i class="bi bi-plus-circle me-1"></i> Thêm ảnh
-                        </a>
+                        @* 🌟 SỬA NÚT BỔ SUNG: Dùng data-url để gọi Modal Popup *@
+                        <button type="button" class="btn btn-success fw-bold shadow-sm rounded-pill px-3 btn-photo-modal" data-url="/Product/Photo/@Model.ProductID?method=add">
+                            <i class="bi bi-plus-circle me-1"></i> Bổ sung ảnh
+                        </button>
                     </div>
                 </div>
             </div>
@@ -24,13 +25,13 @@
             <div class="card-body p-1">
                 <div class="table-responsive">
                     <table class="table table-bordered table-hover mb-0">
-                        <thead class="table-secondary">
+                        <thead class="table-secondary text-center">
                             <tr>
-                                <th style="width:120px" class="text-center">Ảnh</th>
+                                <th style="width:120px">Ảnh</th>
                                 <th>Mô tả</th>
-                                <th style="width:120px" class="text-center">Thứ tự</th>
-                                <th style="width:120px" class="text-center">Hiển thị</th>
-                                <th style="width:100px"></th>
+                                <th style="width:100px">Thứ tự</th>
+                                <th style="width:100px">Hiển thị</th>
+                                <th style="width:140px">Thao tác</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -41,7 +42,7 @@
                                     <tr>
                                         <td class="text-center">
                                             <img src="~/images/products/@(string.IsNullOrEmpty(item.Photo) ? "nophoto.png" : item.Photo)"
-                                                 class="img-thumbnail" style="max-height:80px;" />
+                                                 class="img-thumbnail shadow-sm" style="max-height:80px;" />
                                         </td>
                                         <td class="align-middle">@item.Description</td>
                                         <td class="text-center align-middle">@item.DisplayOrder</td>
@@ -52,15 +53,18 @@
                                             }
                                             else
                                             {
-                                                <span class="badge bg-success">Hiển thị</span>
+                                                <span class="badge bg-info text-dark">Hiển thị</span>
                                             }
                                         </td>
                                         <td class="text-center align-middle text-nowrap">
-                                            <a class="btn btn-sm btn-primary" href="~/Product/Photo/@Model.ProductID?method=edit&photoId=@item.PhotoID">
-                                                <i class="bi bi-pencil"></i>
-                                            </a>
-                                            <a class="btn btn-sm btn-danger" href="~/Product/Photo/@Model.ProductID?method=delete&photoId=@item.PhotoID">
-                                                <i class="bi bi-trash"></i>
+                                            @* 🌟 SỬA NÚT CẬP NHẬT: Gọi Modal Popup *@
+                                            <button type="button" class="btn btn-sm btn-warning shadow-sm btn-photo-modal" data-url="/Product/Photo/@Model.ProductID?method=edit&photoId=@item.PhotoID" title="1.1.2. Cập nhật ảnh">
+                                                <i class="bi bi-pencil-square"></i>
+                                            </button>
+
+                                            @* 🌟 SỬA NÚT XÓA: Gắn class btn-delete-photo để gọi SweetAlert2 *@
+                                            <a class="btn btn-sm btn-danger shadow-sm btn-delete-photo" href="~/Product/Photo/@Model.ProductID?method=delete&photoId=@item.PhotoID" title="1.1.3. Xóa ảnh">
+                                                <i class="bi bi-trash-fill"></i>
                                             </a>
                                         </td>
                                     </tr>
@@ -70,6 +74,14 @@
                     </table>
                 </div>
             </div>
+        </div>
+    </div>
+</div>
+
+@* 🌟 KHUNG MODAL RỖNG: Dùng để chứa form khi ấn nút Thêm/Sửa *@
+<div class="modal fade" id="photoModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content" id="photoModalContent">
         </div>
     </div>
 </div>

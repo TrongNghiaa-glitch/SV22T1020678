@@ -6,6 +6,7 @@ using SV22T1020678.Models.Common;
 using SV22T1020678.Models.Sales;
 using System;
 using System.Collections.Generic;
+using System.Globalization; // 🌟 ĐÃ THÊM: Thư viện để ép kiểu ngày tháng
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -27,19 +28,51 @@ namespace SV22T1020678.Admin.Controllers
             ViewBag.Page = HttpContext.Session.GetInt32($"{SEARCH_CONDITION}_Page") ?? 1;
             ViewBag.SearchValue = HttpContext.Session.GetString($"{SEARCH_CONDITION}_Value") ?? "";
             ViewBag.Status = HttpContext.Session.GetInt32($"{SEARCH_CONDITION}_Status") ?? 0;
+
+            // 🌟 ĐÃ THÊM: Lấy khoảng thời gian từ Session ra lại
+            ViewBag.TimeRange = HttpContext.Session.GetString($"{SEARCH_CONDITION}_TimeRange") ?? "";
+
             return View();
         }
 
         [HttpPost]
-        public async Task<IActionResult> Search(OrderSearchInput condition)
+        public async Task<IActionResult> Search(OrderSearchInput condition, string TimeRange = "")
         {
+            // 1. Lưu Session
             HttpContext.Session.SetInt32($"{SEARCH_CONDITION}_Page", condition.Page);
             HttpContext.Session.SetString($"{SEARCH_CONDITION}_Value", condition.SearchValue ?? "");
-
-            // ĐÃ SỬA: Ép kiểu Enum sang số nguyên int
             HttpContext.Session.SetInt32($"{SEARCH_CONDITION}_Status", (int)condition.Status);
 
+            // 🌟 ĐÃ THÊM: Lưu khoảng thời gian vào Session
+            HttpContext.Session.SetString($"{SEARCH_CONDITION}_TimeRange", TimeRange ?? "");
+
+            // 2. KỸ THUẬT "CHẶT" CHUỖI TÌM KIẾM NGÀY THÁNG
+            DateTime? fromDate = null;
+            DateTime? toDate = null;
+
+            if (!string.IsNullOrWhiteSpace(TimeRange))
+            {
+                var times = TimeRange.Split('-'); // Cắt chuỗi bởi dấu gạch ngang
+                if (times.Length == 2)
+                {
+                    // Ép kiểu chuỗi "dd/MM/yyyy" thành DateTime
+                    if (DateTime.TryParseExact(times[0].Trim(), "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime f))
+                    {
+                        fromDate = f;
+                    }
+                    if (DateTime.TryParseExact(times[1].Trim(), "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime t))
+                    {
+                        // Cộng thêm 1 ngày rồi trừ đi 1 tick để lấy đến 23:59:59 của ngày đó
+                        toDate = t.AddDays(1).AddTicks(-1);
+                    }
+                }
+            }
+
+            // Gán dữ liệu ngày tháng vào condition
+            condition.DateFrom = fromDate;
+            condition.DateTo = toDate;
             condition.PageSize = PAGESIZE;
+
             var data = await SalesDataService.ListOrdersAsync(condition);
             return PartialView("Search", data);
         }
@@ -58,14 +91,13 @@ namespace SV22T1020678.Admin.Controllers
             ViewBag.Provinces = await DictionaryDataService.ListProvincesAsync();
 
             var categoryInput = new PaginationSearchInput { Page = 1, PageSize = 1000, SearchValue = "" };
-            ViewBag.Categories = (await CatalogDataService.ListCategoriesAsync(categoryInput)).DataItems; // Tùy vào tên hàm thực tế của bạn
+            ViewBag.Categories = (await CatalogDataService.ListCategoriesAsync(categoryInput)).DataItems;
 
             var cart = GetCart();
             return View(cart);
         }
 
         [HttpGet]
-        // Thêm int categoryID = 0 vào tham số
         public async Task<IActionResult> SearchProduct(int categoryID = 0, int page = 1, string searchValue = "")
         {
             var input = new ProductSearchInput
@@ -73,7 +105,6 @@ namespace SV22T1020678.Admin.Controllers
                 Page = page,
                 PageSize = PAGESIZE,
                 SearchValue = searchValue ?? "",
-                // Gán thêm CategoryID vào để nó filter trong Database
                 CategoryID = categoryID
             };
 
@@ -118,6 +149,7 @@ namespace SV22T1020678.Admin.Controllers
             HttpContext.Session.Remove(CART_SESSION);
             return RedirectToAction("Create");
         }
+
         [HttpPost]
         public async Task<IActionResult> Init(int customerID, string deliveryProvince, string deliveryAddress)
         {
@@ -126,14 +158,13 @@ namespace SV22T1020678.Admin.Controllers
             if (customerID <= 0 || string.IsNullOrEmpty(deliveryProvince) || string.IsNullOrEmpty(deliveryAddress))
                 return Json(new { success = false, message = "Vui lòng nhập đầy đủ thông tin khách hàng, tỉnh thành và địa chỉ!" });
 
-            // ĐÃ SỬA: Ép cứng số 1 thành kiểu OrderStatusEnum để khớp với Model
             var order = new Order
             {
                 CustomerID = customerID,
                 OrderTime = DateTime.Now,
                 DeliveryProvince = deliveryProvince,
                 DeliveryAddress = deliveryAddress,
-                EmployeeID = 1, // Fix cứng mã nhân viên (tùy theo logic của bạn)
+                EmployeeID = 1,
                 Status = (OrderStatusEnum)1
             };
 
@@ -148,11 +179,9 @@ namespace SV22T1020678.Admin.Controllers
             if (orderId > 0)
             {
                 HttpContext.Session.Remove(CART_SESSION);
-                // ĐÃ FIX: Trả về JSON để Frontend đọc được orderID
                 return Json(new { success = true, orderID = orderId });
             }
 
-            // ĐÃ FIX LỖI CS0161: Bắt buộc phải có dòng return này ở cuối cùng
             return Json(new { success = false, message = "Không thể lưu đơn hàng vào hệ thống." });
         }
 
@@ -172,10 +201,7 @@ namespace SV22T1020678.Admin.Controllers
         [HttpPost]
         public async Task<IActionResult> Accept(int id, string dummy = "")
         {
-            // Gọi service xử lý duyệt đơn vào Database
             await SalesDataService.AcceptOrderAsync(id);
-
-            // Trả về JSON thông báo thành công cho JavaScript đọc
             return Json(new { success = true, message = "Đã duyệt và chấp nhận đơn hàng thành công!" });
         }
 
@@ -212,10 +238,6 @@ namespace SV22T1020678.Admin.Controllers
         public async Task<IActionResult> Finish(int id, string dummy = "")
         {
             await SalesDataService.FinishOrderAsync(id);
-
-            // Xóa dòng cũ: return RedirectToAction("Detail", new { id = id });
-
-            // Thêm dòng mới: Trả về JSON để hiển thị popup
             return Json(new { success = true, message = "Đã xác nhận hoàn tất đơn hàng thành công!" });
         }
 
@@ -236,24 +258,21 @@ namespace SV22T1020678.Admin.Controllers
             await SalesDataService.ShipOrderAsync(id, shipperID);
             return RedirectToAction("Detail", new { id = id });
         }
+
         [HttpPost]
-        // ĐÃ SỬA BƯỚC 1: Thêm async Task<> để dùng được await
         public async Task<IActionResult> UpdateShippingAddress(int id, string deliveryProvince, string deliveryAddress)
         {
-            // 1. Kiểm tra đầu vào
             if (id <= 0 || string.IsNullOrEmpty(deliveryProvince) || string.IsNullOrEmpty(deliveryAddress))
             {
                 return Json(new { success = false, message = "Vui lòng nhập đầy đủ thông tin Tỉnh/Thành và Địa chỉ!" });
             }
 
-            // 2. Lấy thông tin đơn hàng cũ để không bị mất dữ liệu khi Update
             var currentOrder = await SalesDataService.GetOrderAsync(id);
             if (currentOrder == null)
             {
                 return Json(new { success = false, message = "Không tìm thấy đơn hàng!" });
             }
 
-            // 3. Đổ dữ liệu cũ sang đối tượng Order, CHỈ GHI ĐÈ 2 trường địa chỉ
             var orderToUpdate = new Order
             {
                 OrderID = currentOrder.OrderID,
@@ -265,13 +284,10 @@ namespace SV22T1020678.Admin.Controllers
                 ShippedTime = currentOrder.ShippedTime,
                 FinishedTime = currentOrder.FinishedTime,
                 Status = currentOrder.Status,
-
-                // GHI ĐÈ ĐỊA CHỈ MỚI:
                 DeliveryProvince = deliveryProvince,
                 DeliveryAddress = deliveryAddress
             };
 
-            // 4. ĐÃ SỬA BƯỚC 2: Gọi hàm UpdateOrderAsync ĐÃ CÓ SẴN trong thư viện
             bool result = await SalesDataService.UpdateOrderAsync(orderToUpdate);
 
             if (result)
@@ -281,6 +297,7 @@ namespace SV22T1020678.Admin.Controllers
 
             return Json(new { success = false, message = "Không thể cập nhật thông tin lúc này." });
         }
+
         // ==========================================
         // 4. HÀM BỔ TRỢ QUẢN LÝ SESSION
         // ==========================================

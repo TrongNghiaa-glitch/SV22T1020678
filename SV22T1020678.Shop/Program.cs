@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Localization;
 using System.Globalization;
-
+using Microsoft.Extensions.FileProviders;
+using System.IO;
 var builder = WebApplication.CreateBuilder(args);
 
 // =======================================================
@@ -22,8 +23,9 @@ builder.Services.AddControllersWithViews()
     });
 
 // Authentication (Đã đổi tên Cookie sang Shop để không bị đá văng tài khoản bên Admin)
-builder.Services.AddAuthentication("AdminWebAuth")
-    .AddCookie("AdminWebAuth", option =>
+// SỬA "AdminWebAuth" THÀNH "CustomerWebAuth"
+builder.Services.AddAuthentication("CustomerWebAuth") // <--- Đổi ở đây
+    .AddCookie("CustomerWebAuth", option =>           // <--- Đổi cả ở đây nữa
     {
         option.Cookie.Name = "LiteCommerce.Shop";
         option.LoginPath = "/Account/Login";
@@ -82,3 +84,16 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.Run();
+
+// ...
+app.UseStaticFiles(); // Cái này giữ nguyên để nó nhận CSS/JS trong wwwroot
+
+// CHÈN ĐOẠN NÀY VÀO ĐỂ DÙNG CHUNG ẢNH TRONG SOLUTION
+app.UseStaticFiles(new StaticFileOptions
+{
+    // Lùi ra 1 cấp (thư mục Solution) rồi đi vào thư mục Uploads
+    FileProvider = new PhysicalFileProvider(
+        Path.Combine(builder.Environment.ContentRootPath, "..", "Uploads")),
+    RequestPath = "/img/products" // URL trên trình duyệt vẫn đẹp như cũ
+});
+// ...

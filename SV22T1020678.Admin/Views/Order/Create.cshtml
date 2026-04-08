@@ -1,4 +1,5 @@
 ﻿@model IEnumerable<SV22T1020678.Models.Sales.CartItem>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 @{
     ViewBag.Title = "Lập đơn hàng";
 }
@@ -175,156 +176,189 @@
     </div>
 </div>
 
-@section Scripts {
-    <script>
-        // 1. HÀM LOAD DANH SÁCH SẢN PHẨM BẰNG AJAX
-        function doSearch(page) {
-            try {
-                var searchValue = $("#formSearchProduct input[name='searchValue']").val() || "";
-                var categoryID = $("#formSearchProduct select[name='categoryID']").val() || 0;
-                var actionUrl = $("#formSearchProduct").prop("action");
+@@section scripts {
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-                $('#searchResult').html('<div class="text-center text-muted mt-3"><div class="spinner-border text-primary mb-2" role="status"></div><p>Đang tải dữ liệu...</p></div>');
+<script>
+    // 1. HÀM LOAD DANH SÁCH SẢN PHẨM BẰNG AJAX
+    function doSearch(page) {
+        try {
+            var searchValue = $("#formSearchProduct input[name='searchValue']").val() || "";
+            var categoryID = $("#formSearchProduct select[name='categoryID']").val() || 0;
+            var actionUrl = "/Order/SearchProduct";
 
-                $.ajax({
-                    url: actionUrl,
-                    type: "GET",
-                    data: {
-                        categoryID: categoryID,
-                        searchValue: searchValue,
-                        page: page
-                    },
-                    success: function (result) {
-                        if (result.includes("<html") || result.includes("<body")) {
-                            $('#searchResult').html('<p class="text-danger text-center mt-3">Lỗi C#: Tham số truyền vào chưa đúng, hãy kiểm tra lại hàm SearchProduct!</p>');
-                        } else {
-                            $('#searchResult').html(result);
-                        }
-                    },
-                    error: function () {
-                        $('#searchResult').html('<p class="text-danger text-center mt-3">Lỗi mạng: Không thể kết nối đến máy chủ.</p>');
-                    }
-                });
-            } catch (err) {
-                console.error("Lỗi JS ở hàm doSearch: ", err);
-                $('#searchResult').html('<p class="text-danger text-center mt-3">Lỗi JavaScript! Ấn F12 xem Console.</p>');
-            }
-        }
+            $('#searchResult').html('<div class="text-center text-muted mt-3"><div class="spinner-border text-primary mb-2" role="status"></div><p>Đang tải dữ liệu...</p></div>');
 
-        // 2. HÀM KIỂM TRA FORM ĐỂ BẬT/TẮT NÚT XÁC NHẬN
-        function validateOrderForm() {
-            try {
-                var cusId = $("select[name='customerID']").val() || "";
-                var prov = ($("select[name='deliveryProvince']").val() || "").trim();
-                var addr = ($("input[name='deliveryAddress']").val() || $("textarea[name='deliveryAddress']").val() || "").trim();
-
-                var trCount = $("#shoppingCart tbody tr").length;
-                var firstCellText = $("#shoppingCart tbody tr:first td").text() || "";
-                var isCartEmpty = trCount === 0 || firstCellText.includes("trống");
-
-                var btn = $("#btnSubmitOrder");
-                if (btn.length > 0) {
-                    if (cusId !== "" && prov !== "" && addr !== "" && !isCartEmpty) {
-                        btn.prop("disabled", false);
+            $.ajax({
+                url: actionUrl,
+                type: "GET",
+                data: {
+                    categoryID: categoryID,
+                    searchValue: searchValue,
+                    page: page
+                },
+                success: function (result) {
+                    if (result.includes("<html") || result.includes("<body")) {
+                        $('#searchResult').html('<p class="text-danger text-center mt-3">Lỗi C#: Tham số truyền vào chưa đúng, hãy kiểm tra lại hàm SearchProduct!</p>');
                     } else {
-                        btn.prop("disabled", true);
+                        $('#searchResult').html(result);
                     }
+                },
+                error: function () {
+                    $('#searchResult').html('<p class="text-danger text-center mt-3">Lỗi mạng: Không thể kết nối đến máy chủ.</p>');
                 }
-            } catch (err) {
-                console.error("Lỗi chạy kiểm tra form: ", err);
+            });
+        } catch (err) {
+            console.error("Lỗi JS ở hàm doSearch: ", err);
+            $('#searchResult').html('<p class="text-danger text-center mt-3">Lỗi JavaScript! Ấn F12 xem Console.</p>');
+        }
+    }
+
+    // 2. HÀM KIỂM TRA FORM ĐỂ BẬT/TẮT NÚT XÁC NHẬN
+    function validateOrderForm() {
+        try {
+            var cusId = $("select[name='customerID']").val() || "";
+            var prov = ($("select[name='deliveryProvince']").val() || "").trim();
+            var addr = ($("input[name='deliveryAddress']").val() || $("textarea[name='deliveryAddress']").val() || "").trim();
+
+            var trCount = $("#shoppingCart tbody tr").length;
+            var firstCellText = $("#shoppingCart tbody tr:first td").text() || "";
+            var isCartEmpty = trCount === 0 || firstCellText.includes("trống");
+
+            var btn = $("#btnSubmitOrder");
+            if (btn.length > 0) {
+                if (cusId !== "" && prov !== "" && addr !== "" && !isCartEmpty) {
+                    btn.prop("disabled", false);
+                } else {
+                    btn.prop("disabled", true);
+                }
             }
+        } catch (err) {
+            console.error("Lỗi chạy kiểm tra form: ", err);
+        }
+    }
+
+    // 3. KHỞI TẠO SỰ KIỆN KHI LOAD TRANG XONG
+    $(document).ready(function () {
+
+        // Khởi tạo Select2
+        try {
+            if (typeof $.fn.select2 !== 'undefined') {
+                $('.select2').select2({ width: '100%' });
+            }
+        } catch (err) {
+            console.error("Lỗi Select2: ", err);
         }
 
-        // 3. KHỞI TẠO SỰ KIỆN KHI LOAD TRANG XONG
-        $(document).ready(function () {
-
-            // Khởi tạo Select2
-            try {
-                if (typeof $.fn.select2 !== 'undefined') {
-                    $('.select2').select2({ width: '100%' });
-                }
-            } catch (err) {
-                console.error("Lỗi Select2: ", err);
-            }
-
-            // Gắn sự kiện Tìm kiếm
-            $('#formSearchProduct').submit(function (e) {
-                e.preventDefault();
-                doSearch(1);
-            });
-
-            // Tự động tìm kiếm khi đổi Loại hàng
-            $("#formSearchProduct select[name='categoryID']").on("change", function () {
-                doSearch(1);
-            });
-
-            // Gọi tìm kiếm lần đầu
+        // Gắn sự kiện Tìm kiếm
+        $('#formSearchProduct').submit(function (e) {
+            e.preventDefault();
             doSearch(1);
-
-            // Gắn sự kiện Validate form (Tỉnh/thành, Khách hàng, Địa chỉ)
-            validateOrderForm();
-            $("select[name='customerID'], select[name='deliveryProvince'], input[name='deliveryAddress'], textarea[name='deliveryAddress']").on("input change", function () {
-                validateOrderForm();
-            });
-            $("select[name='customerID'], select[name='deliveryProvince']").on("select2:select select2:unselect", function () {
-                validateOrderForm();
-            });
-
-            // Sự kiện: Thêm vào giỏ hàng
-            $(document).on("submit", ".formAddToCart", function (e) {
-                e.preventDefault();
-                var form = $(this);
-                $.ajax({
-                    url: form.prop("action"),
-                    type: form.prop("method"),
-                    data: form.serialize(),
-                    success: function (result) {
-                        var newCartTable = $(result).find("#shoppingCart").html();
-                        if (newCartTable) {
-                            $("#shoppingCart").html(newCartTable);
-                            validateOrderForm(); // Check lại nút xác nhận
-                        } else {
-                            window.location.reload();
-                        }
-                    },
-                    error: function () { alert("Lỗi: Không thể thêm mặt hàng vào giỏ!"); }
-                });
-            });
-
-            // Sự kiện: Chốt Lập đơn hàng
-            $("#formOrderInit").submit(function (e) {
-                e.preventDefault();
-                if ($("#btnSubmitOrder").is(":disabled")) return false;
-
-                $.ajax({
-                    url: $(this).prop("action"),
-                    type: $(this).prop("method"),
-                    data: $(this).serialize(),
-                    success: function (result) {
-                        if (result.success) {
-                            window.location.href = "/Order/Detail/" + result.orderID;
-                        } else {
-                            alert(result.message);
-                        }
-                    },
-                    error: function () { alert("Lỗi hệ thống khi kết nối đến máy chủ!"); }
-                });
-            });
-
-            // Sự kiện: Mở popup sửa số lượng trong giỏ
-            $(document).on("click", ".open-modal", function (e) {
-                e.preventDefault();
-                $.ajax({
-                    url: $(this).attr("href"),
-                    type: "GET",
-                    success: function (data) {
-                        $("#dialogModalContent").html(data);
-                        $("#dialogModal").modal("show");
-                    },
-                    error: function () { alert("Không thể tải giao diện cập nhật mặt hàng!"); }
-                });
-            });
-
         });
-    </script>
+
+        // Tự động tìm kiếm khi đổi Loại hàng
+        $("#formSearchProduct select[name='categoryID']").on("change", function () {
+            doSearch(1);
+        });
+
+        // Gọi tìm kiếm lần đầu
+        doSearch(1);
+
+        // Gắn sự kiện Validate form (Tỉnh/thành, Khách hàng, Địa chỉ)
+        validateOrderForm();
+        $("select[name='customerID'], select[name='deliveryProvince'], input[name='deliveryAddress'], textarea[name='deliveryAddress']").on("input change", function () {
+            validateOrderForm();
+        });
+        $("select[name='customerID'], select[name='deliveryProvince']").on("select2:select select2:unselect", function () {
+            validateOrderForm();
+        });
+
+        // Sự kiện: Thêm vào giỏ hàng
+        $(document).on("submit", ".formAddToCart", function (e) {
+            e.preventDefault();
+            var form = $(this);
+            $.ajax({
+                url: form.prop("action"),
+                type: form.prop("method"),
+                data: form.serialize(),
+                success: function (result) {
+                    var newCartTable = $(result).find("#shoppingCart").html();
+                    if (newCartTable) {
+                        $("#shoppingCart").html(newCartTable);
+                        validateOrderForm(); // Check lại nút xác nhận
+                    } else {
+                        window.location.reload();
+                    }
+                },
+                error: function () { Swal.fire('Lỗi', 'Không thể thêm mặt hàng vào giỏ!', 'error'); }
+            });
+        });
+
+        // ======================================================
+        // 🌟 SỰ KIỆN: CHỐT LẬP ĐƠN HÀNG (ĐÃ NÂNG CẤP SWEETALERT2)
+        // ======================================================
+        $("#formOrderInit").submit(function (e) {
+            e.preventDefault();
+            if ($("#btnSubmitOrder").is(":disabled")) return false;
+
+            var form = $(this);
+
+            // Nổ Popup hỏi xác nhận
+            Swal.fire({
+                title: 'Xác nhận lập đơn hàng?',
+                text: "Đơn hàng sẽ được tạo với các mặt hàng hiện có trong giỏ!",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#0d6efd',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Đồng ý lập đơn',
+                cancelButtonText: 'Hủy bỏ'
+            }).then((result) => {
+                // Nếu bấm "Đồng ý"
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: form.prop("action"),
+                        type: form.prop("method"),
+                        data: form.serialize(),
+                        success: function (result) {
+                            if (result.success) {
+                                // Báo thành công, chờ 2 giây rồi mới chuyển trang
+                                Swal.fire({
+                                    title: 'Tuyệt vời!',
+                                    text: 'Đã lập đơn hàng mới thành công.',
+                                    icon: 'success',
+                                    confirmButtonColor: '#0d6efd',
+                                    timer: 2000,
+                                    showConfirmButton: false
+                                }).then(() => {
+                                    window.location.href = "/Order/Detail/" + result.orderID;
+                                });
+                            } else {
+                                Swal.fire('Thất bại', result.message, 'warning');
+                            }
+                        },
+                        error: function () {
+                            Swal.fire('Lỗi hệ thống', 'Không thể kết nối đến máy chủ!', 'error');
+                        }
+                    });
+                }
+            });
+        });
+
+        // Sự kiện: Mở popup sửa số lượng trong giỏ
+        $(document).on("click", ".open-modal", function (e) {
+            e.preventDefault();
+            $.ajax({
+                url: $(this).attr("href"),
+                type: "GET",
+                success: function (data) {
+                    $("#dialogModalContent").html(data);
+                    $("#dialogModal").modal("show");
+                },
+                error: function () { Swal.fire('Lỗi', 'Không thể tải giao diện cập nhật!', 'error'); }
+            });
+        });
+
+    });
+</script>
 }

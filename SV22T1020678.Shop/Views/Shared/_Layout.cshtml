@@ -1,6 +1,12 @@
 ﻿@using System.Security.Claims
 @{
-    var userName = User.Identity.IsAuthenticated ? (User.FindFirst("FullName")?.Value ?? User.Identity.Name) : "Tài khoản";
+    // Sửa lại logic: Ưu tiên lấy GivenName (Tên thật), nếu không có mới lấy Name (Email)
+    var userName = "Tài khoản";
+    if (User.Identity.IsAuthenticated)
+    {
+        var nameClaim = User.FindFirst(ClaimTypes.GivenName) ?? User.FindFirst(ClaimTypes.Name);
+        userName = nameClaim?.Value ?? User.Identity.Name;
+    }
 }
 <!DOCTYPE html>
 <html lang="en">
@@ -36,7 +42,7 @@
 
     <div class="container-fluid px-5 d-none d-lg-block border-bottom bg-white py-2">
         <div class="row gx-0 align-items-center">
-            <div class="col-lg-8 small text-muted">Help / Support / Contact | Call Us: (+012) 1234 567890</div>
+            <div class="col-lg-8 small text-muted">Help / Support / Contact | Call Us: (+84) 32 713 2631</div>
             <div class="col-lg-4 text-end">
                 <div class="dropdown">
                     <a href="#" class="dropdown-toggle text-dark fw-bold small" data-bs-toggle="dropdown">

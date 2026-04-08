@@ -1,23 +1,22 @@
 ﻿@model SV22T1020678.Models.Catalog.Product
 @{
     Layout = null;
-    // Đã sửa DomainModels thành Catalog
     var attributes = ViewBag.Attributes as IEnumerable<SV22T1020678.Models.Catalog.ProductAttribute>;
 }
 <div class="row justify-content-center">
     <div class="col-12">
-        <div class="card card-success card-outline mt-4">
+        <div class="card card-primary card-outline mt-4 shadow-sm">
             <div class="card-header">
                 <div class="row align-items-center">
                     <div class="col">
-                        <h6 id="attributes" class="card-title mb-0">
-                            <i class="bi bi-list-check me-2"></i> Thuộc tính mặt hàng
+                        <h6 id="attributes" class="mb-0 fw-bold">
+                            <i class="bi bi-list-task me-2"></i> Thuộc tính mặt hàng
                         </h6>
                     </div>
                     <div class="col text-end">
-                        <a class="btn btn-sm btn-primary" href="~/Product/Attribute/@Model.ProductID?method=add">
-                            <i class="bi bi-plus"></i> Thêm thuộc tính
-                        </a>
+                        <button type="button" class="btn btn-success fw-bold shadow-sm rounded-pill px-3 btn-attribute-modal" data-url="/Product/Attribute/@Model.ProductID?method=add">
+                            <i class="bi bi-plus-circle me-1"></i> Bổ sung thuộc tính
+                        </button>
                     </div>
                 </div>
             </div>
@@ -25,12 +24,12 @@
             <div class="card-body p-1">
                 <div class="table-responsive">
                     <table class="table table-bordered table-hover mb-0">
-                        <thead class="table-secondary">
+                        <thead class="table-secondary text-center">
                             <tr>
                                 <th>Tên thuộc tính</th>
                                 <th>Giá trị</th>
-                                <th style="width:120px" class="text-center">Thứ tự</th>
-                                <th style="width:100px"></th>
+                                <th style="width:100px">Thứ tự</th>
+                                <th style="width:140px">Thao tác</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -43,11 +42,11 @@
                                         <td class="align-middle">@item.AttributeValue</td>
                                         <td class="text-center align-middle">@item.DisplayOrder</td>
                                         <td class="text-center align-middle text-nowrap">
-                                            <a class="btn btn-sm btn-primary" href="~/Product/Attribute/@Model.ProductID?method=edit&attributeId=@item.AttributeID">
-                                                <i class="bi bi-pencil"></i>
-                                            </a>
-                                            <a class="btn btn-sm btn-danger" href="~/Product/Attribute/@Model.ProductID?method=delete&attributeId=@item.AttributeID">
-                                                <i class="bi bi-trash"></i>
+                                            <button type="button" class="btn btn-sm btn-warning shadow-sm btn-attribute-modal" data-url="/Product/Attribute/@Model.ProductID?method=edit&attributeId=@item.AttributeID" title="Cập nhật thuộc tính">
+                                                <i class="bi bi-pencil-square"></i>
+                                            </button>
+                                            <a class="btn btn-sm btn-danger shadow-sm btn-delete-attribute" href="~/Product/Attribute/@Model.ProductID?method=delete&attributeId=@item.AttributeID" title="Xóa thuộc tính">
+                                                <i class="bi bi-trash-fill"></i>
                                             </a>
                                         </td>
                                     </tr>
@@ -57,6 +56,13 @@
                     </table>
                 </div>
             </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="attributeModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content" id="attributeModalContent">
         </div>
     </div>
 </div>
